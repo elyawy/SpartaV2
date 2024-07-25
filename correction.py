@@ -17,21 +17,6 @@ from aligner_interface import Aligner
 from raxml_parser import get_substitution_model
 from utility import *
 
-class StandardMemoryScaler(BaseEstimator, TransformerMixin):
-
-    def __init__(self, epsilon=1e-4):
-        self._epsilon = epsilon
-        
-    def fit(self, X, y = None):
-        self._mean = X.mean()
-        self._std = X.std()
-
-        return self
-
-    def transform(self, X):
-        X = (X-self._mean)/(self._std+self._epsilon)
-       
-        return X
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -39,7 +24,7 @@ def parse_args(arg_list: list[str] | None):
     # _parser.add_argument('-c','--config', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-t','--type', action='store',metavar="Type of MSA NT/AA" , type=str, required=True)
     _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
-    # _parser.add_argument('-s','--seed', action='store',metavar="Simulation config" , type=int, required=False)
+    _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=True)
     _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, required=True)
 
     _parser.add_argument('-l','--lengthdist', action='store',metavar="Simulation config" , type=str, required=True)
@@ -69,8 +54,8 @@ def prepare_substitution_model(main_path: Path, sequence_type: str):
     return substitution_model
 
 
-def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, substitution_model: dict):
-    sim_protocol = sf.SimProtocol(tree_path)
+def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, substitution_model: dict, seed: int):
+    sim_protocol = sf.SimProtocol(tree_path, seed=seed)
     simulator = sf.Simulator(sim_protocol,
                              simulation_type=sf.SIMULATION_TYPE[substitution_model["mode"]])
 
@@ -148,6 +133,7 @@ def main(arg_list: list[str] | None = None):
     print(args)
 
     MAIN_PATH = Path(args.input).resolve()
+    SEED = args.seed
     SEQUENCE_TYPE = args.type
     NUM_SIMS = args.numsim
     ALIGNER = Aligner(args.aligner.upper())
@@ -159,10 +145,11 @@ def main(arg_list: list[str] | None = None):
     TREE_PATH = get_tree_path(MAIN_PATH)
     MSA_PATH = get_msa_path(MAIN_PATH)
 
-    prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL)
+    prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL, SEED)
     substitution_model = prepare_substitution_model(MAIN_PATH, SEQUENCE_TYPE)
     msas, sum_stats = simulate_data(prior_sampler=prior_sampler, num_sims=NUM_SIMS,
-                                              tree_path=TREE_PATH, substitution_model=substitution_model)
+                                    tree_path=TREE_PATH, substitution_model=substitution_model,
+                                    seed=SEED)
     realigned_sum_stats = compute_realigned_stats(msas, sum_stats, ALIGNER, TREE_PATH)
     regressors, regressors_performence = compute_regressors(true_stats=sum_stats, corrected_stats=realigned_sum_stats)
 
@@ -172,7 +159,7 @@ def main(arg_list: list[str] | None = None):
     except:
         print("correction folder exists already")
     
-    with open(full_correction_path / f'regressors_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}', 'wb') as f:
+    with open(full_correction_path / f'regressors_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.pickle', 'wb') as f:
         pickle.dump(regressors, f)
     pd.DataFrame(regressors_performence).to_csv(
         full_correction_path / f'regression_performance_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.csv')

@@ -1,4 +1,5 @@
 from pathlib import Path
+from sklearn.base import BaseEstimator, TransformerMixin# define the transformer
 import msastats
 
 from prior_sampler import PriorSampler
@@ -30,7 +31,8 @@ def get_msa_path(main_path: Path) -> str:
     return msa_path
 
 
-def prepare_prior_sampler(empirical_msa_path: str, length_distribution: str, indel_model:str):
+def prepare_prior_sampler(empirical_msa_path: str, length_distribution: str,
+                         indel_model:str, seed: int):
     
     empirical_stats = msastats.calculate_fasta_stats(empirical_msa_path)
     smallest_sequence_size = empirical_stats[MIN_LENGTH_STAT_INDEX]
@@ -40,5 +42,61 @@ def prepare_prior_sampler(empirical_msa_path: str, length_distribution: str, ind
 
     prior_sampler = PriorSampler(seq_lengths=seq_lengths_in_msa,
                         len_dist=length_distribution,
-                        indel_model=indel_model)
+                        indel_model=indel_model,
+                        seed=seed)
     return prior_sampler
+
+PARAMS_LIST = [
+    "root_length",
+    "insertion_rate",
+    "deletion_rate",
+    "length_param_insertion",
+    "length_param_deletion"
+]
+SUMSTATS_LIST = [f'SS_{i}' for i in range(0,27)]
+SUMSTATS_DEFINITION = {
+    'SS_0': "AVG_GAP_SIZE",
+    'SS_1': "MSA_LEN",
+    'SS_2': "MSA_MAX_LEN",
+    'SS_3': "MSA_MIN_LEN",
+    'SS_4': "TOT_NUM_GAPS",
+    'SS_5': "NUM_GAPS_LEN_ONE",
+    'SS_6': "NUM_GAPS_LEN_TWO",
+    'SS_7': "NUM_GAPS_LEN_THREE",
+    'SS_8': "NUM_GAPS_LEN_AT_LEAST_FOUR",
+    'SS_9': "AVG_UNIQUE_GAP_SIZE",
+    'SS_10': "TOT_NUM_UNIQUE_GAPS",
+    'SS_11': "NUM_GAPS_LEN_ONE\nPOS_1_GAPS",
+    'SS_12': "NUM_GAPS_LEN_ONE\nPOS_2_GAPS",
+    'SS_13': "NUM_GAPS_LEN_ONE\nPOS_N_MINUS_1_GAPS",
+    'SS_14': "NUM_GAPS_LEN_TWO\nPOS_1_GAPS",
+    'SS_15': "NUM_GAPS_LEN_TWO\nPOS_2_GAPS",
+    'SS_16': "NUM_GAPS_LEN_TWO\nPOS_N_MINUS_1_GAPS",
+    'SS_17': "NUM_GAPS_LEN_THREE\nPOS_1_GAPS",
+    'SS_18': "NUM_GAPS_LEN_THREE\nPOS_2_GAPS",
+    'SS_19': "NUM_GAPS_LEN_THREE\nPOS_N_MINUS_1_GAPS",
+    'SS_20': "NUM_GAPS_LEN_AT_LEAST_FOUR\nPOS_1_GAPS",
+    'SS_21': "NUM_GAPS_LEN_AT_LEAST_FOUR\nPOS_2_GAPS",
+    'SS_22': "NUM_GAPS_LEN_AT_LEAST_FOUR\nPOS_N_MINUS_1_GAPS",
+    'SS_23': "MSA_POSITION_WITH_0_GAPS",
+    'SS_24': "MSA_POSITION_WITH_1_GAPS",
+    'SS_25': "MSA_POSITION_WITH_2_GAPS",
+    'SS_26': "MSA_POSITION_WITH_N_MINUS_1_GAPS"
+}
+
+
+class StandardMemoryScaler(BaseEstimator, TransformerMixin):
+
+    def __init__(self, epsilon=1e-4):
+        self._epsilon = epsilon
+        
+    def fit(self, X, y = None):
+        self._mean = X.mean()
+        self._std = X.std()
+
+        return self
+
+    def transform(self, X):
+        X = (X-self._mean)/(self._std+self._epsilon)
+       
+        return X

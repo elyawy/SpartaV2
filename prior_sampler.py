@@ -46,7 +46,7 @@ class PriorSampler:
         self.indel_model = indel_model
 
         self.length_distribution = length_dist_mapper[len_dist]
-
+        self.len_dist = len_dist
 
         self.len_prior_dict = length_distribution_priors[len_dist]
 
@@ -80,7 +80,7 @@ class PriorSampler:
 
         root_lengths = np.random.randint(*self.sequence_length_prior, num_sims)
 
-        length_distribution = np.repeat(self.length_distribution, num_sims)
+        length_distribution = np.repeat(self.len_dist, num_sims)
 
         #     root_lengths: int
         #     insertion_rates: float
