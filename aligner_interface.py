@@ -28,7 +28,7 @@ class Aligner:
 
 
     def get_realigned_msa(self) -> str:
-        print(self._aligner_cmd)
+        # print(self._aligner_cmd)
         if self._aligner_name == "MAFFT":
             realigned_msa, stderr = self._aligner_cmd()
         if self._aligner_name == "PRANK":

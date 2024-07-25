@@ -1,8 +1,8 @@
-import os, pathlib, tempfile, pickle, argparse, warnings, copy
-from io import StringIO
+import os, tempfile, pickle, argparse, warnings, copy
+from pathlib import Path
 import numpy as np
 import pandas as pd
-# from Bio import Phylo
+
 from sklearn.base import BaseEstimator, TransformerMixin# define the transformer
 from sklearn import linear_model, model_selection, exceptions
 from sklearn.pipeline import Pipeline
@@ -12,9 +12,10 @@ from scipy.stats import pearsonr
 from msasim import sailfish as sf
 import msastats
 
-from prior_sampler import SimConfig, protocol_updater
+from prior_sampler import PriorSampler, protocol_updater
 from aligner_interface import Aligner
 from raxml_parser import get_substitution_model
+from utility import *
 
 class StandardMemoryScaler(BaseEstimator, TransformerMixin):
 
@@ -32,86 +33,51 @@ class StandardMemoryScaler(BaseEstimator, TransformerMixin):
        
         return X
 
-_parser = argparse.ArgumentParser(allow_abbrev=False)
-_parser.add_argument('-i','--input', action='store',metavar="Input folder", type=str, required=True)
-# _parser.add_argument('-c','--config', action='store',metavar="Simulation config" , type=str, required=True)
-_parser.add_argument('-t','--type', action='store',metavar="Type of MSA NT/AA" , type=str, required=True)
-_parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
-# _parser.add_argument('-s','--seed', action='store',metavar="Simulation config" , type=int, required=False)
-_parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, required=True)
+def parse_args(arg_list: list[str] | None):
+    _parser = argparse.ArgumentParser(allow_abbrev=False)
+    _parser.add_argument('-i','--input', action='store',metavar="Input folder", type=str, required=True)
+    # _parser.add_argument('-c','--config', action='store',metavar="Simulation config" , type=str, required=True)
+    _parser.add_argument('-t','--type', action='store',metavar="Type of MSA NT/AA" , type=str, required=True)
+    _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
+    # _parser.add_argument('-s','--seed', action='store',metavar="Simulation config" , type=int, required=False)
+    _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, required=True)
 
-_parser.add_argument('-l','--lengthdist', action='store',metavar="Simulation config" , type=str, required=True)
-_parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
-_parser.add_argument('-k','--keep-stats', action='store_true')
-_parser.add_argument('-v','--verbose', action='store_true')
-
-
-args = _parser.parse_args()
-
-MAIN_PATH = args.input
-MODE = args.type
-NUM_SIMS = args.numsim
-ALIGNER = Aligner(args.aligner.upper())
-LENGTH_DISTRIBUTION = args.lengthdist
-INDEL_MODEL = args.model
-KEEP_STATS = args.keep_stats
-VERBOSE = args.verbose
+    _parser.add_argument('-l','--lengthdist', action='store',metavar="Simulation config" , type=str, required=True)
+    _parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
+    _parser.add_argument('-k','--keep-stats', action='store_true')
+    _parser.add_argument('-v','--verbose', action='store_true')
 
 
-MAIN_PATH = pathlib.Path(args.input).resolve()
-TREE_PATH = None
-MSA_PATH = None
-if len( n := list(MAIN_PATH.glob("*.tree")) + list(MAIN_PATH.glob("*.newick"))) == 1:
-    TREE_PATH = str(n[0])
+    args = _parser.parse_args()
+    return args
 
-if len( n := list(MAIN_PATH.glob("*.fasta"))) == 1:
-    MSA_PATH = str(n[0])
-
-
-if TREE_PATH is None or MSA_PATH is None:
-    print("no fasta or tree file")
-    exit()
-if TREE_PATH is None or MSA_PATH is None:
-    print("no fasta or tree file")
-    exit()
-
-min_length_index = msastats.stats_names().index("MSA_MIN_LEN")
-max_length_index = msastats.stats_names().index("MSA_MAX_LEN")
-
-    
-empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
-smallest_sequence_size = empirical_stats[min_length_index]
-largest_sequence_size = empirical_stats[max_length_index]
-
-seq_lengths_in_msa = [smallest_sequence_size, largest_sequence_size]
-
-sim_config = SimConfig(seq_lengths=seq_lengths_in_msa,
-                       len_dist=LENGTH_DISTRIBUTION,
-                       indel_model=INDEL_MODEL)
-# np.random.seed(int(sim_config.seed))
 
 
 # prepare indelible control file for subsitutions:
-substitution_model = get_substitution_model(MAIN_PATH) if MODE == "NT" else {}
-substitution_model["mode"] = "DNA" if MODE == "NT" else "PROTEIN"
+def prepare_substitution_model(main_path: Path, sequence_type: str):
 
-if substitution_model["mode"] == "PROTEIN":
-    substitution_model["submodel"] = sf.MODEL_CODES.WAG,
-    substitution_model["gamma_shape"] = 1.0
-    substitution_model["gamma_cats"] = 4
-else:
-    substitution_model["params"] = substitution_model["freq"] + substitution_model["rates"]
+    substitution_model = get_substitution_model(main_path) if sequence_type == "NT" else {}
+    substitution_model["mode"] = "DNA" if sequence_type == "NT" else "PROTEIN"
+
+    if substitution_model["mode"] == "PROTEIN":
+        substitution_model["submodel"] = sf.MODEL_CODES.WAG,
+        substitution_model["gamma_shape"] = 1.0
+        substitution_model["gamma_cats"] = 4
+    else:
+        substitution_model["params"] = substitution_model["freq"] + substitution_model["rates"]
+    
+    return substitution_model
 
 
-def init_correction(sim_config, num_sims):
-    sim_protocol = sf.SimProtocol(TREE_PATH)
+def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, substitution_model: dict):
+    sim_protocol = sf.SimProtocol(tree_path)
     simulator = sf.Simulator(sim_protocol,
                              simulation_type=sf.SIMULATION_TYPE[substitution_model["mode"]])
 
-    correction_list = []
-    correction_list_sum_stats = []
+    simulated_msas = []
+    sum_stats = []
 
-    sim_params_correction = sim_config.get_random_sim(num_sims)
+    sim_params_correction = prior_sampler.sample(num_sims)
     simulator.set_replacement_model(model=substitution_model["submodel"][0],
                                     model_parameters=substitution_model.get("params", None),
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
@@ -124,86 +90,108 @@ def init_correction(sim_config, num_sims):
         sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines()[1::2])
         # print(sim_stats)
-        correction_list.append(sim_msa)
-        correction_list_sum_stats.append(numeric_params + sim_stats)    
+        simulated_msas.append(sim_msa)
+        sum_stats.append(numeric_params + sim_stats)    
 
-    return correction_list, correction_list_sum_stats
-msas_list, sum_stats_list = init_correction(sim_config, NUM_SIMS)
+    return simulated_msas, sum_stats
 
 
-def get_regressors(msa_list: list[sf.Msa], sum_stats_list):
+def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
+                            sequence_aligner: Aligner, tree_path: str):
     realigned_sum_stats = []
-    for msa in msa_list:
+    for msa in msas:
         sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
 
         with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
             tempf.write(sim_fasta_unaligned)
             tempf.seek(0)
-            ALIGNER.set_input_file(tempf.name, tree_file=TREE_PATH)
-            realigned_msa = ALIGNER.get_realigned_msa()
+            sequence_aligner.set_input_file(tempf.name, tree_file=tree_path)
+            realigned_msa = sequence_aligner.get_realigned_msa()
         
         realigned_msa = [s[s.index("\n"):].replace("\n","") for s in realigned_msa.split(">")[1:]]
         realigned_stats = msastats.calculate_msa_stats(realigned_msa)
         realigned_sum_stats.append(realigned_stats)
 
-    def compute_regressors(true_stats, corrected_stats):
-        X = np.array(true_stats, dtype=float)
-        Y = np.array(corrected_stats, dtype=float).T
+    return realigned_sum_stats
 
-        reg = linear_model.Lasso()
-        parameters = {'alpha':np.logspace(-7,4,20)}
-        clf_lassocv = model_selection.GridSearchCV(estimator = reg,
-                                    param_grid = parameters, cv=3,
-                                    scoring = 'neg_mean_squared_error')
-        regression_pipline = Pipeline([("scaler", StandardMemoryScaler()),('regression', clf_lassocv)])
-        regressors = []
-        performance_metrics = []
-        for y in Y:
-            regression_pipline.fit(X, y)
-            saved_estimator = copy.deepcopy(regression_pipline)
-            regressors.append(saved_estimator)
-            
-            Y_pred = regression_pipline.predict(X)
-            r_val, p_val = pearsonr(Y_pred,y)
-            performance_metrics.append({
-                'pearsonr': r_val,
-                'p_val': p_val,
-                'mean_test_score': np.min(np.sqrt(-clf_lassocv.cv_results_['mean_test_score']))
-            })
-        return regressors, performance_metrics
+def compute_regressors(true_stats: list[list[float]], corrected_stats: list[list[float]]):
+    X = np.array(true_stats, dtype=float)
+    Y = np.array(corrected_stats, dtype=float).T
 
-    regressors, performance = compute_regressors(sum_stats_list, realigned_sum_stats)        
-
-    return regressors, performance, realigned_sum_stats
-regressors, performance, realigned_sum_stats = get_regressors(msas_list, sum_stats_list)
+    reg = linear_model.Lasso()
+    parameters = {'alpha':np.logspace(-7,4,20)}
+    clf_lassocv = model_selection.GridSearchCV(estimator = reg,
+                                param_grid = parameters, cv=3,
+                                scoring = 'neg_mean_squared_error')
+    regression_pipline = Pipeline([("scaler", StandardMemoryScaler()),('regression', clf_lassocv)])
+    regressors = []
+    performance_metrics = []
+    for y in Y:
+        regression_pipline.fit(X, y)
+        saved_estimator = copy.deepcopy(regression_pipline)
+        regressors.append(saved_estimator)
+        
+        Y_pred = regression_pipline.predict(X)
+        r_val, p_val = pearsonr(Y_pred,y)
+        performance_metrics.append({
+            'pearsonr': r_val,
+            'p_val': p_val,
+            'mean_test_score': np.min(np.sqrt(-clf_lassocv.cv_results_['mean_test_score']))
+        })
+    return regressors, performance_metrics
 
 
-if MAIN_PATH is None:
-    for weight in [reg.best_model_.coef_ for reg in regressors]:
-        print(",".join([str(w) for w in weight]))
-else:
-    full_correction_path = os.path.join(MAIN_PATH, f"{args.aligner}_correction")
-    path_joiner = lambda x: os.path.join(full_correction_path, x)
+
+
+def main(arg_list: list[str] | None = None):
+    args = parse_args(arg_list)
+    print(args)
+
+    MAIN_PATH = Path(args.input).resolve()
+    SEQUENCE_TYPE = args.type
+    NUM_SIMS = args.numsim
+    ALIGNER = Aligner(args.aligner.upper())
+    LENGTH_DISTRIBUTION = args.lengthdist
+    INDEL_MODEL = args.model
+    KEEP_STATS = args.keep_stats
+    VERBOSE = args.verbose
+
+    TREE_PATH = get_tree_path(MAIN_PATH)
+    MSA_PATH = get_msa_path(MAIN_PATH)
+
+    prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL)
+    substitution_model = prepare_substitution_model(MAIN_PATH, SEQUENCE_TYPE)
+    msas, sum_stats = simulate_data(prior_sampler=prior_sampler, num_sims=NUM_SIMS,
+                                              tree_path=TREE_PATH, substitution_model=substitution_model)
+    realigned_sum_stats = compute_realigned_stats(msas, sum_stats, ALIGNER, TREE_PATH)
+    regressors, regressors_performence = compute_regressors(true_stats=sum_stats, corrected_stats=realigned_sum_stats)
+
+    full_correction_path = MAIN_PATH / f"{args.aligner}_correction"
     try:
         os.mkdir(full_correction_path)
     except:
         print("correction folder exists already")
-    pickle.dump(regressors, open(path_joiner(f'regressors_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}'), 'wb'))
-    pd.DataFrame(performance).to_csv(path_joiner(f'regression_performance_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.csv'))
+    
+    with open(full_correction_path / f'regressors_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}', 'wb') as f:
+        pickle.dump(regressors, f)
+    pd.DataFrame(regressors_performence).to_csv(
+        full_correction_path / f'regression_performance_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.csv')
 
-if KEEP_STATS:
-    print("saving stats...")
-    true_stats = pd.DataFrame(sum_stats_list)
-    true_stats.columns = map(str, range(len(true_stats.columns)))
-    true_stats.to_parquet("true_stats.parquet.gzip", compression='gzip', index=False)
+    if KEEP_STATS:
+        print("saving stats...")
+        true_stats = pd.DataFrame(sum_stats)
+        true_stats.columns = map(str, range(len(true_stats.columns)))
+        true_stats.to_parquet("true_stats.parquet.gzip", compression='gzip', index=False)
 
-    realigned_stats = pd.DataFrame(realigned_sum_stats)
-    realigned_stats.columns = map(str, realigned_stats.columns)
-    realigned_stats.to_parquet("realigned_stats.parquet.gzip", compression='gzip', index=False)
+        realigned_stats = pd.DataFrame(realigned_sum_stats)
+        realigned_stats.columns = map(str, realigned_stats.columns)
+        realigned_stats.to_parquet("realigned_stats.parquet.gzip", compression='gzip', index=False)
 
-    infered_stats = np.array([regressor.predict(true_stats.values).T for regressor in regressors])
-    infered_stats = pd.DataFrame(infered_stats.T, columns=map(str, range(27)))
-    infered_stats.to_parquet("infered_stats.parquet.gzip", compression='gzip', index=False)
+        infered_stats = np.array([regressor.predict(true_stats.values).T for regressor in regressors])
+        infered_stats = pd.DataFrame(infered_stats.T, columns=map(str, range(27)))
+        infered_stats.to_parquet("infered_stats.parquet.gzip", compression='gzip', index=False)
 
 
 
+if __name__ == '__main__':
+    main()

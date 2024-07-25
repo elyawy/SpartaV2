@@ -34,7 +34,7 @@ def protocol_updater(protocol: sf.SimProtocol, params: list) -> None:
     protocol.set_insertion_length_distributions(params[4])
     protocol.set_deletion_length_distributions(params[5])
 
-class SimConfig:
+class PriorSampler:
     def __init__(self, conf_file=None,
                        len_dist="zipf",
                        rate_priors=[[-4,-1],[-1,1]], # log
@@ -60,7 +60,7 @@ class SimConfig:
 
 
 
-    def get_random_sim(self, num_sims):
+    def sample(self, num_sims):
         
         insertion_lengths = [self.length_distribution(i) for i in np.random.uniform(*self.len_prior_dict["insertion"], num_sims)]
         sum_of_rates = 10**np.random.uniform(*self.rate_prior_dict["sum_rates"], num_sims)
