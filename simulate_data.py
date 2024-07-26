@@ -27,24 +27,19 @@ def parse_args(arg_list: list[str] | None):
 def simulate_data(sim_params, num_sims: int, tree_path: str, seed: int):
     sim_protocol = sf.SimProtocol(tree=tree_path)
     sim_protocol.set_seed(seed)
-    simulator = sf.Simulator(sim_protocol,
-                             simulation_type=sf.SIMULATION_TYPE.PROTEIN)
+    simulator = sf.Simulator(sim_protocol)
 
     # simulated_msas = []
     sum_stats = []
 
-    simulator.set_replacement_model(model=sf.MODEL_CODES.WAG,
-                                    gamma_parameters_alpha=1.0,
-                                    gamma_parameters_catergories=1)
-
-
     for idx,params in enumerate(sim_params):
         numeric_params = [params[0],params[1], params[2], params[4].p, params[5].p]
         print(idx)
+        print(numeric_params)
         protocol_updater(sim_protocol, params)
 
         sim_msa = simulator()
-        sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines()[1::2])
+        sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines())
         # print(sim_stats)
         # simulated_msas.append(sim_msa)
         sum_stats.append(numeric_params + sim_stats)    
