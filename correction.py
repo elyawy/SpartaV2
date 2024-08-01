@@ -63,12 +63,14 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
     sum_stats = []
 
     sim_params_correction = prior_sampler.sample(num_sims)
+
     simulator.set_replacement_model(model=substitution_model["submodel"][0],
                                     model_parameters=substitution_model.get("params", None),
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
                                     gamma_parameters_catergories=substitution_model.get("gamma_cats", 1))
 
     for idx,params in enumerate(sim_params_correction):
+        print(params)
         numeric_params = [params[0],params[1], params[2], params[4].p, params[5].p]
         protocol_updater(sim_protocol, params)
 

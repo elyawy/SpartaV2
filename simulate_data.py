@@ -26,6 +26,7 @@ def parse_args(arg_list: list[str] | None):
 
 def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, seed: int):
     sim_protocol = sf.SimProtocol(tree=tree_path)
+    print(sim_protocol.get_tree().get_num_nodes())
     sim_protocol.set_seed(seed)
     simulator = sf.Simulator(sim_protocol)
 

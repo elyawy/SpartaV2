@@ -30,10 +30,10 @@ length_dist_mapper = {
 
 def protocol_updater(protocol: sf.SimProtocol, params: list) -> None:
     protocol.set_sequence_size(params[0])
-    protocol.set_insertion_rates(params[1])
-    protocol.set_deletion_rates(params[2])
-    protocol.set_insertion_length_distributions(params[3])
-    protocol.set_deletion_length_distributions(params[4])
+    protocol.set_insertion_rates(insertion_rate=params[1])
+    protocol.set_deletion_rates(deletion_rate=params[2])
+    protocol.set_insertion_length_distributions(insertion_dist=params[3])
+    protocol.set_deletion_length_distributions(deletion_dist=params[4])
 
 class PriorSampler:
     def __init__(self, conf_file=None,
@@ -43,7 +43,7 @@ class PriorSampler:
                        indel_model="sim",
                        seed = 1):
         self.seed = seed
-        np.random.seed(seed)
+        random.seed(seed)
         self.indel_model = indel_model
 
         self.length_distribution = length_dist_mapper[len_dist]
@@ -67,7 +67,8 @@ class PriorSampler:
         while True:
             x = random.uniform(*self.len_prior_dict["insertion"])
             if self.indel_model == "sim":
-                yield self.len_dist, self.length_distribution(x), self.length_distribution(x)
+                indel_length_dist = self.length_distribution(x)
+                yield self.len_dist, indel_length_dist, indel_length_dist
             else:
                 y = random.uniform(*self.len_prior_dict["deletion"])
                 yield self.len_dist, self.length_distribution(x), self.length_distribution(y)
@@ -86,3 +87,14 @@ class PriorSampler:
                 yield (insertion_rate, deletion_rate)
 
 
+    def sample(self, n=1):
+        root_length = self.sample_root_length()
+        indel_rates = self.sample_rates()
+        length_dists = self.sample_length_distributions()
+        params_sample = []
+        for params in zip(root_length, indel_rates, length_dists):
+            if n==0:
+                break
+            params_sample.append(params)
+            n = n - 1
+        return params_sample
