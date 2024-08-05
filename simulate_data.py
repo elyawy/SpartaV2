@@ -24,25 +24,33 @@ def parse_args(arg_list: list[str] | None):
     return args
 
 
-def simulate_data(sim_params, num_sims: int, tree_path: str, seed: int):
+def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, seed: int):
     sim_protocol = sf.SimProtocol(tree=tree_path)
+    print(sim_protocol.get_tree().get_num_nodes())
     sim_protocol.set_seed(seed)
     simulator = sf.Simulator(sim_protocol)
 
     # simulated_msas = []
     sum_stats = []
+    root_sampler = prior_sampler.sample_root_length()
+    indel_rate_sampler = prior_sampler.sample_rates()
+    length_distribution_sampler = prior_sampler.sample_length_distributions()
 
-    for idx,params in enumerate(sim_params):
-        numeric_params = [params[0],params[1], params[2], params[4].p, params[5].p]
+    for idx in range(num_sims):
+        root_length = next(root_sampler)
+        insertion_rate, deletion_rate = next(indel_rate_sampler)
+        lendist, insertion_length_dist, deletion_length_dist = next(length_distribution_sampler)
+
+        # print(root_length, insertion_rate, deletion_rate, insertion_length_dist, deletion_length_dist)
         print(idx)
-        print(numeric_params)
-        protocol_updater(sim_protocol, params)
+        numeric_params = [root_length ,insertion_rate, deletion_rate, insertion_length_dist.p, deletion_length_dist.p]
+        protocol_updater(sim_protocol, [root_length, insertion_rate, deletion_rate,
+                         insertion_length_dist, deletion_length_dist])
 
         sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines())
-        # print(sim_stats)
-        # simulated_msas.append(sim_msa)
-        sum_stats.append(numeric_params + sim_stats)    
+
+        sum_stats.append(numeric_params + sim_stats + [lendist])
 
     return np.array(sum_stats)
 
@@ -63,13 +71,12 @@ def main(arg_list: list[str] | None = None):
 
 
     prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL, SEED)
-    sim_params = prior_sampler.sample(NUM_SIMS)
+    msa_stats = simulate_data(prior_sampler, num_sims=NUM_SIMS, tree_path=TREE_PATH, seed=SEED)
 
-    msa_stats = simulate_data(sim_params, num_sims=NUM_SIMS, tree_path=TREE_PATH, seed=SEED)
-
-    data_full = np.concatenate([msa_stats, sim_params[:,[3]]], axis=1)
+    data_full = msa_stats
     data_full = pd.DataFrame(data_full, columns=PARAMS_LIST + SUMSTATS_LIST + ["length_distribution"])
     data_full.to_parquet(MAIN_PATH / f"full_data_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.parquet.gzip", compression="gzip")
+
 
     
 if __name__ == "__main__":
