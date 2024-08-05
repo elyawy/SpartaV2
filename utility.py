@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from sklearn.base import BaseEstimator, TransformerMixin# define the transformer
 import msastats
@@ -100,3 +101,25 @@ class StandardMemoryScaler(BaseEstimator, TransformerMixin):
         X = (X-self._mean)/(self._std+self._epsilon)
        
         return X
+
+
+
+logger = logging.getLogger('main')
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s[%(levelname)s][%(filename)s][%(funcName)s]: %(message)s')
+
+
+
+def setLogHandler(path: Path, mode: str="a"):
+    handler = logging.FileHandler(path / 'info.log', mode=mode)  # Adjust the path
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+    logger.addHandler(handler)
+
+    # handler = logging.FileHandler(path / 'error.log')  # Adjust the path
+    # handler.setFormatter(formatter)
+    # handler.setLevel(logging.ERROR)
+    # logger.addHandler(handler)
+
+

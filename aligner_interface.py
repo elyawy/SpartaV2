@@ -5,7 +5,7 @@ from Bio.Align.Applications import ClustalwCommandline
 
 
 aligner_params_dict = {
-    "MAFFT": functools.partial(MafftCommandline, globalpair=True, maxiterate=1000),
+    "MAFFT": functools.partial(MafftCommandline, globalpair=True),
     "PRANK": functools.partial(PrankCommandline, f="fasta", once=False),
     "CLUSTALW": functools.partial(ClustalwCommandline, output="FASTA")
 }

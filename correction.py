@@ -25,7 +25,7 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-t','--type', action='store',metavar="Type of MSA NT/AA" , type=str, required=True)
     _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
     _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=True)
-    _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, required=True)
+    _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, default="mafft", required=False)
 
     _parser.add_argument('-l','--lengthdist', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
@@ -69,22 +69,29 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
                                     gamma_parameters_catergories=substitution_model.get("gamma_cats", 1))
 
+    logger.info("Starting msa simulation")
     for idx,params in enumerate(sim_params_correction):
-        print(params)
-        numeric_params = [params[0],params[1], params[2], params[4].p, params[5].p]
-        protocol_updater(sim_protocol, params)
+        root_length = params[0]
+        insertion_rate, deletion_rate = params[1]
+        lendist, insertion_length_dist, deletion_length_dist = params[2]
+
+        numeric_params = [root_length, insertion_rate, deletion_rate, insertion_length_dist.p, deletion_length_dist.p]
+        protocol_updater(sim_protocol, [root_length, insertion_rate, deletion_rate,
+                         insertion_length_dist, deletion_length_dist])
 
         sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines()[1::2])
         # print(sim_stats)
         simulated_msas.append(sim_msa)
-        sum_stats.append(numeric_params + sim_stats)    
+        sum_stats.append(numeric_params + sim_stats)
+    logger.info(f"Done with {num_sims} msa simulations")
 
     return simulated_msas, sum_stats
 
 
 def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
                             sequence_aligner: Aligner, tree_path: str):
+    logger.info("Realigning MSAs and recomputing stats")
     realigned_sum_stats = []
     for msa in msas:
         sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
@@ -98,10 +105,13 @@ def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
         realigned_msa = [s[s.index("\n"):].replace("\n","") for s in realigned_msa.split(">")[1:]]
         realigned_stats = msastats.calculate_msa_stats(realigned_msa)
         realigned_sum_stats.append(realigned_stats)
-
+    
+    logger.info("Done recomputing stats")
     return realigned_sum_stats
 
 def compute_regressors(true_stats: list[list[float]], corrected_stats: list[list[float]]):
+    logger.info("Performing regression on all realigned stats")
+
     X = np.array(true_stats, dtype=float)
     Y = np.array(corrected_stats, dtype=float).T
 
@@ -125,14 +135,15 @@ def compute_regressors(true_stats: list[list[float]], corrected_stats: list[list
             'p_val': p_val,
             'mean_test_score': np.min(np.sqrt(-clf_lassocv.cv_results_['mean_test_score']))
         })
+    logger.info("Done with regression")
     return regressors, performance_metrics
 
 
 
 
 def main(arg_list: list[str] | None = None):
+    logging.basicConfig()
     args = parse_args(arg_list)
-    print(args)
 
     MAIN_PATH = Path(args.input).resolve()
     SEED = args.seed
@@ -143,6 +154,12 @@ def main(arg_list: list[str] | None = None):
     INDEL_MODEL = args.model
     KEEP_STATS = args.keep_stats
     VERBOSE = args.verbose
+
+    setLogHandler(MAIN_PATH)
+    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL {}".format(
+        MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, LENGTH_DISTRIBUTION, INDEL_MODEL
+    ))
+
 
     TREE_PATH = get_tree_path(MAIN_PATH)
     MSA_PATH = get_msa_path(MAIN_PATH)

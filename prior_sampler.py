@@ -22,8 +22,15 @@ length_distribution_priors = {
     }
 }
 
+
+def fast_zipf(a_param, truncation=150):
+    harmonic_series = np.arange(1,truncation+1)
+    harmonic_series = np.power(harmonic_series, -a_param)
+    harmonic_sum = np.sum(harmonic_series)
+    return harmonic_series / harmonic_sum
+
 length_dist_mapper = {
-    "zipf": sf.ZipfDistribution,
+    "zipf": sf.CustomDistribution,
     "poisson": sf.PoissonDistribution,
     "geometric": sf.GeometricDistribution
 }
@@ -38,7 +45,7 @@ def protocol_updater(protocol: sf.SimProtocol, params: list) -> None:
 class PriorSampler:
     def __init__(self, conf_file=None,
                        len_dist="zipf",
-                       rate_priors=[[-4,-1],[-1,1]], # log
+                       rate_priors=[[-3,-1],[-1,1]], # log
                        seq_lengths=[100,500],
                        indel_model="sim",
                        seed = 1):
@@ -67,11 +74,16 @@ class PriorSampler:
         while True:
             x = random.uniform(*self.len_prior_dict["insertion"])
             if self.indel_model == "sim":
-                indel_length_dist = self.length_distribution(x)
+                indel_length_dist = self.length_distribution(fast_zipf(x))
+                indel_length_dist.p = x
                 yield self.len_dist, indel_length_dist, indel_length_dist
             else:
                 y = random.uniform(*self.len_prior_dict["deletion"])
-                yield self.len_dist, self.length_distribution(x), self.length_distribution(y)
+                indel_length_dist_insertion = self.length_distribution(fast_zipf(x))
+                indel_length_dist_insertion.p = x
+                indel_length_dist_deletion = self.length_distribution(fast_zipf(y))
+                indel_length_dist_deletion.p = y
+                yield self.len_dist, indel_length_dist_insertion, indel_length_dist_deletion
 
 
 

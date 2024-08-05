@@ -1,4 +1,4 @@
-import argparse
+import argparse, logging
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -25,8 +25,9 @@ def parse_args(arg_list: list[str] | None):
 
 
 def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, seed: int):
+    logger.debug(f"num_sims {num_sims} tree_path {tree_path} seed {seed}")
     sim_protocol = sf.SimProtocol(tree=tree_path)
-    print(sim_protocol.get_tree().get_num_nodes())
+
     sim_protocol.set_seed(seed)
     simulator = sf.Simulator(sim_protocol)
 
@@ -36,13 +37,12 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
     indel_rate_sampler = prior_sampler.sample_rates()
     length_distribution_sampler = prior_sampler.sample_length_distributions()
 
-    for idx in range(num_sims):
+    logger.info("Starting msa simulation")
+    for _ in range(num_sims):
         root_length = next(root_sampler)
         insertion_rate, deletion_rate = next(indel_rate_sampler)
         lendist, insertion_length_dist, deletion_length_dist = next(length_distribution_sampler)
 
-        # print(root_length, insertion_rate, deletion_rate, insertion_length_dist, deletion_length_dist)
-        print(idx)
         numeric_params = [root_length ,insertion_rate, deletion_rate, insertion_length_dist.p, deletion_length_dist.p]
         protocol_updater(sim_protocol, [root_length, insertion_rate, deletion_rate,
                          insertion_length_dist, deletion_length_dist])
@@ -50,14 +50,16 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
         sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines())
 
-        sum_stats.append(numeric_params + sim_stats + [lendist])
+        sum_stats.append(numeric_params + sim_stats)
+    logger.info(f"Done with {num_sims} msa simulations")
 
     return np.array(sum_stats)
 
 # TODO: simulate only indels lime in the old Sparta -> major speedups
 def main(arg_list: list[str] | None = None):
+    logging.basicConfig()
+
     args = parse_args(arg_list)
-    print(args)
 
     MAIN_PATH = Path(args.input).resolve()
     SEED = args.seed
@@ -65,6 +67,12 @@ def main(arg_list: list[str] | None = None):
     LENGTH_DISTRIBUTION = args.lengthdist
     INDEL_MODEL = args.model
     VERBOSE = args.verbose
+    
+    setLogHandler(MAIN_PATH)
+    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL {}".format(
+        MAIN_PATH, SEED, NUM_SIMS, LENGTH_DISTRIBUTION, INDEL_MODEL
+    ))
+
 
     TREE_PATH = get_tree_path(MAIN_PATH)
     MSA_PATH = get_msa_path(MAIN_PATH)
@@ -74,7 +82,7 @@ def main(arg_list: list[str] | None = None):
     msa_stats = simulate_data(prior_sampler, num_sims=NUM_SIMS, tree_path=TREE_PATH, seed=SEED)
 
     data_full = msa_stats
-    data_full = pd.DataFrame(data_full, columns=PARAMS_LIST + SUMSTATS_LIST + ["length_distribution"])
+    data_full = pd.DataFrame(data_full, columns=PARAMS_LIST + SUMSTATS_LIST)
     data_full.to_parquet(MAIN_PATH / f"full_data_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.parquet.gzip", compression="gzip")
 
 
