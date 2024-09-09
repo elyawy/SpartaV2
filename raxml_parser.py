@@ -1,6 +1,6 @@
 import os
 import re
-
+from msasim import sailfish as sf
 
 def parse_raxmlNG_output(res_filepath):
 
@@ -38,7 +38,9 @@ def parse_raxmlNG_content(content):
 
     # gamma (alpha parameter) and proportion of invariant sites
     gamma_regex = re.search("alpha:\s+(\d+\.?\d*)\s+", content)
-    pinv_regex = re.search("P-inv.*:\s+(\d+\.?\d*)", content)
+    # pinv_regex = re.search("P-inv.*:\s+(\d+\.?\d*)", content)
+    pinv_regex = re.search(r"[\w\s-]*\b(?:invariant|Invariant|P-inv)\b[\w\s-]*:\s*(\d+\.?\d*)"
+                           , content) #updated Regex to catch several possible options of pinv in raxml log
     cats_regex = re.search("\(\d+ cats,", content)
     if gamma_regex:
         res_dict['gamma'] = gamma_regex.group(1).strip()
@@ -71,7 +73,7 @@ def parse_raxmlNG_content(content):
 
 
 def get_substitution_model(path):
-    joined_path = os.path.join(path,"T1.raxml.log")
+    joined_path = os.path.join(path,"T1.raxml.log") #Ksenia - note that the hardcoded file name is not ideal and should be explained in readme
 
     res_dict = parse_raxmlNG_output(joined_path)
 
@@ -86,8 +88,20 @@ def get_substitution_model(path):
         "freq": (pi_A, pi_C, pi_G, pi_T),
         "rates": (x,y,z,m,n,k),
         "inv_prop": res_dict["pInv"],
-        "gamma_shape": res_dict["gamma"],
-        "gamma_cats": res_dict["cats"],
-        "submodel": "GTR"
+        "gamma_shape": float(res_dict["gamma"]), #Ksenia - added casting to float as the expected value in sailfish is float
+        "gamma_cats": int(res_dict["cats"]),  #Ksenia -added casting to int as the expected value in sailfish is int
+        # "submodel": "GTR"
+        "submodel": sf.MODEL_CODES.GTR  #Ksenia - replaced "GTR" string into model object expected by sailfish
     }
+    # KSENIA ADDED - creates a file with all substitution model parameters
+    # needed for ppl who want to simulate later and use full set of substitution model parameters for that
+    ##############################
+    with open(os.path.join(path, "substitution_model.txt"), "w") as f:
+        for key, value in res_dict.items():
+            f.write(f'{key}: {value}\n')
+        abc = [a, b, c, d, e]
+        abc_names = ["a", "b", "c", "d", "e"]
+        for i in range(5):
+            f.write(f'{abc_names[i]}: {abc[i]}\n')
+    ##############################
     return subtitution_model

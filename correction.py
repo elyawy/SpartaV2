@@ -49,8 +49,13 @@ def prepare_substitution_model(main_path: Path, sequence_type: str):
         substitution_model["gamma_shape"] = 1.0
         substitution_model["gamma_cats"] = 4
     else:
-        substitution_model["params"] = substitution_model["freq"] + substitution_model["rates"]
-    
+        substitution_model["params"] = list(substitution_model["freq"]) + substitution_model["rates"] #KSENIA added list()
+
+    # KSENIA ADDED - add all parameters to the substituation model file to be used later in simulation ##################
+    with open(os.path.join(main_path, "substitution_model.txt"), "a") as f:
+        for key, value in substitution_model.items():
+            f.write(f'{key}: {value}\n')
+    ##############################
     return substitution_model
 
 
@@ -64,7 +69,9 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
 
     sim_params_correction = prior_sampler.sample(num_sims)
 
-    simulator.set_replacement_model(model=substitution_model["submodel"][0],
+    # KSENIA [0] takes from GTR only letter 'G', hence removed [0]
+    # simulator.set_replacement_model(model=substitution_model["submodel"][0],
+    simulator.set_replacement_model(model=substitution_model["submodel"],
                                     model_parameters=substitution_model.get("params", None),
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
                                     gamma_parameters_catergories=substitution_model.get("gamma_cats", 1))
