@@ -50,22 +50,22 @@ def main(arg_list: list[str] | None = None):
 
     INDEL_MODELS = ["sim", "rim"]
 
-    # processes = []
-    # for model in INDEL_MODELS:
-    #     simulate_cmd = [interpreter, CURRENT_SCRIPT_DIR / "simulate_data.py",
-    #                     "-i", str(MAIN_PATH), "-n", str(NUM_SIMS),
-    #                     "-s", str(SEED), "-l", "zipf", "-m", f"{model}"]
+    processes = []
+    for model in INDEL_MODELS:
+        simulate_cmd = [interpreter, CURRENT_SCRIPT_DIR / "simulate_data.py",
+                        "-i", str(MAIN_PATH), "-n", str(NUM_SIMS),
+                        "-s", str(SEED), "-l", "zipf", "-m", f"{model}"]
     
-    #     correction_cmd_sim = [interpreter, CURRENT_SCRIPT_DIR / "correction.py",
-    #                           "-i", str(MAIN_PATH), "-n", str(NUM_SIMS_CORRECTION),
-    #                           "-s", str(SEED+1), "-l", "zipf", "-m", f"{model}",
-    #                           "-t", SEQUENCE_TYPE]
-    #     SEED += 2
+        correction_cmd_sim = [interpreter, CURRENT_SCRIPT_DIR / "correction.py",
+                              "-i", str(MAIN_PATH), "-n", str(NUM_SIMS_CORRECTION),
+                              "-s", str(SEED+1), "-l", "zipf", "-m", f"{model}",
+                              "-t", SEQUENCE_TYPE]
+        SEED += 2
 
-    #     processes.append(subprocess.Popen(simulate_cmd))
-    #     processes.append(subprocess.Popen(correction_cmd_sim))
+        processes.append(subprocess.Popen(simulate_cmd))
+        processes.append(subprocess.Popen(correction_cmd_sim))
 
-    # exit_codes = [p.wait() for p in processes]
+    exit_codes = [p.wait() for p in processes]
     
     abc_cmd = [interpreter, CURRENT_SCRIPT_DIR / "abc_inference.py", "-i", str(MAIN_PATH)]
     subprocess.run(abc_cmd)

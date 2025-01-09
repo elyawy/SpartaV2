@@ -6,6 +6,7 @@ from msasim import sailfish as sf
 
 from getting_priors import get_means
 
+TRUNCATION = 150
 
 length_distribution_priors = {
     "zipf": {
@@ -74,14 +75,14 @@ class PriorSampler:
         while True:
             x = random.uniform(*self.len_prior_dict["insertion"])
             if self.indel_model == "sim":
-                indel_length_dist = self.length_distribution(fast_zipf(x))
+                indel_length_dist = self.length_distribution(fast_zipf(x, TRUNCATION))
                 indel_length_dist.p = x
                 yield self.len_dist, indel_length_dist, indel_length_dist
             else:
                 y = random.uniform(*self.len_prior_dict["deletion"])
-                indel_length_dist_insertion = self.length_distribution(fast_zipf(x))
+                indel_length_dist_insertion = self.length_distribution(fast_zipf(x, TRUNCATION))
                 indel_length_dist_insertion.p = x
-                indel_length_dist_deletion = self.length_distribution(fast_zipf(y))
+                indel_length_dist_deletion = self.length_distribution(fast_zipf(y, TRUNCATION))
                 indel_length_dist_deletion.p = y
                 yield self.len_dist, indel_length_dist_insertion, indel_length_dist_deletion
 
