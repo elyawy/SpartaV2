@@ -83,6 +83,25 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal"):
 
     top_stats[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params.csv", index=False)
 
+    if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > 50:
+        print("SIM")
+        full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
+        top_sim_data = full_sim_data.nsmallest(100, "distances")
+        top_sim_data
+        print("R_ID", top_sim_data["insertion_rate"].mean())
+        print("A_ID", top_sim_data["length_param_insertion"].mean())
+
+    else:
+        full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
+        top_rim_data = full_rim_data.nsmallest(100, "distances")
+        top_rim_data
+        print("RIM")
+        print("R_I", top_rim_data["insertion_rate"].mean())
+        print("R_D", top_rim_data["deletion_rate"].mean())
+        print("A_I", top_rim_data["length_param_insertion"].mean())
+        print("A_D", top_rim_data["length_param_deletion"].mean())
+
+
 
 def main(arg_list: list[str] | None = None):
     logging.basicConfig()

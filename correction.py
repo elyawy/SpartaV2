@@ -17,6 +17,7 @@ from aligner_interface import Aligner
 from raxml_parser import get_substitution_model
 from utility import *
 
+from tqdm import tqdm
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -93,7 +94,8 @@ def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
                             sequence_aligner: Aligner, tree_path: str):
     logger.info("Realigning MSAs and recomputing stats")
     realigned_sum_stats = []
-    for msa in msas:
+
+    for msa in tqdm(msas):
         sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
 
         with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
@@ -187,15 +189,15 @@ def main(arg_list: list[str] | None = None):
         print("saving stats...")
         true_stats = pd.DataFrame(sum_stats)
         true_stats.columns = map(str, range(len(true_stats.columns)))
-        true_stats.to_parquet("true_stats.parquet.gzip", compression='gzip', index=False)
+        true_stats.to_parquet(full_correction_path / "true_stats.parquet.gzip", compression='gzip', index=False)
 
         realigned_stats = pd.DataFrame(realigned_sum_stats)
         realigned_stats.columns = map(str, realigned_stats.columns)
-        realigned_stats.to_parquet("realigned_stats.parquet.gzip", compression='gzip', index=False)
+        realigned_stats.to_parquet(full_correction_path / "realigned_stats.parquet.gzip", compression='gzip', index=False)
 
         infered_stats = np.array([regressor.predict(true_stats.values).T for regressor in regressors])
         infered_stats = pd.DataFrame(infered_stats.T, columns=map(str, range(27)))
-        infered_stats.to_parquet("infered_stats.parquet.gzip", compression='gzip', index=False)
+        infered_stats.to_parquet(full_correction_path / "infered_stats.parquet.gzip", compression='gzip', index=False)
 
 
 
