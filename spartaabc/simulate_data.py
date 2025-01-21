@@ -9,6 +9,7 @@ from msasim import sailfish as sf
 from prior_sampler import protocol_updater
 from utility import *
 
+from tqdm import tqdm
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -20,7 +21,7 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-v','--verbose', action='store_true')
 
 
-    args = _parser.parse_args()
+    args = _parser.parse_args(arg_list)
     return args
 
 
@@ -38,7 +39,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
     length_distribution_sampler = prior_sampler.sample_length_distributions()
 
     logger.info("Starting msa simulation")
-    for _ in range(num_sims):
+    for _ in tqdm(range(num_sims)):
         root_length = next(root_sampler)
         insertion_rate, deletion_rate = next(indel_rate_sampler)
         lendist, insertion_length_dist, deletion_length_dist = next(length_distribution_sampler)
@@ -55,10 +56,30 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
 
     return np.array(sum_stats)
 
+def generate_summary_statistics(MAIN_PATH: Path, SEED: int, NUM_SIMS: int,
+                                LENGTH_DISTRIBUTION: str, INDEL_MODEL: str) -> None:
+    logging.basicConfig()
+    setLogHandler(MAIN_PATH)
+    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL {}".format(
+        MAIN_PATH, SEED, NUM_SIMS, LENGTH_DISTRIBUTION, INDEL_MODEL
+    ))
+
+
+    TREE_PATH = get_tree_path(MAIN_PATH)
+    MSA_PATH = get_msa_path(MAIN_PATH)
+
+
+    prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL, SEED)
+    msa_stats = simulate_data(prior_sampler, num_sims=NUM_SIMS, tree_path=TREE_PATH, seed=SEED)
+
+    data_full = msa_stats
+    data_full = pd.DataFrame(data_full, columns=PARAMS_LIST + SUMSTATS_LIST)
+    data_full.to_parquet(MAIN_PATH / f"full_data_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.parquet.gzip", compression="gzip")
+
+
 # TODO: simulate only indels lime in the old Sparta -> major speedups
 def main(arg_list: list[str] | None = None):
     logging.basicConfig()
-
     args = parse_args(arg_list)
 
     MAIN_PATH = Path(args.input).resolve()

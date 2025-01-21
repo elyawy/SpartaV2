@@ -1,9 +1,18 @@
 import argparse, pickle
 import numpy as np
 import pandas as pd
+from dataclasses import dataclass
 
 from utility import *
 
+@dataclass
+class IndelParams:
+    insertion_rate: float
+    deletion_rate: float
+    insertion_length_parameter: float
+    deletion_length_parameter: float
+    length_distribution: str
+    indel_model: str
 
 
 def parse_args(arg_list: list[str] | None):
@@ -40,7 +49,7 @@ def bias_correction(regressors, data: pd.DataFrame):
     temp_data = pd.DataFrame(temp_data.T, columns=SUMSTATS_LIST)
     return temp_data
 
-def run(main_path: Path, aligner: str, distance_metric: str="mahal"):
+def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff: int=100) -> IndelParams:
 
 
     MSA_PATH = get_msa_path(main_path)
@@ -79,27 +88,33 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal"):
     full_stats_data["distances"] = calculated_distances
     full_stats_data[PARAMS_LIST] = params_data
 
-    top_stats = full_stats_data.nsmallest(100, "distances")
+    top_stats = full_stats_data.nsmallest(top_cutoff, "distances")
 
     top_stats[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params.csv", index=False)
 
-    if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > 50:
+    if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > top_cutoff // 2:
         print("SIM")
         full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
-        top_sim_data = full_sim_data.nsmallest(100, "distances")
-        top_sim_data
-        print("R_ID", top_sim_data["insertion_rate"].mean())
-        print("A_ID", top_sim_data["length_param_insertion"].mean())
+        top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
+        R_ID = top_sim_data["insertion_rate"].mean()
+        A_ID = top_sim_data["length_param_insertion"].mean()
+        return IndelParams(R_ID, R_ID,
+                           A_ID, A_ID,
+                           length_distribution="zipf",
+                           indel_model="SIM")
 
     else:
         full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
-        top_rim_data = full_rim_data.nsmallest(100, "distances")
-        top_rim_data
-        print("RIM")
-        print("R_I", top_rim_data["insertion_rate"].mean())
-        print("R_D", top_rim_data["deletion_rate"].mean())
-        print("A_I", top_rim_data["length_param_insertion"].mean())
-        print("A_D", top_rim_data["length_param_deletion"].mean())
+        top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
+        R_I = top_rim_data["insertion_rate"].mean()
+        R_D = top_rim_data["deletion_rate"].mean()
+        A_I = top_rim_data["length_param_insertion"].mean()
+        A_D = top_rim_data["length_param_deletion"].mean()
+
+        return IndelParams(R_I, R_D,
+                           A_I, A_D,
+                           length_distribution="zipf",
+                           indel_model="RIM")
 
 
 

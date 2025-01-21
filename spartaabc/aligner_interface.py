@@ -14,7 +14,10 @@ aligner_params_dict = {
 class Aligner:
     def __init__(self, aligner: str) -> None:
         self._aligner_name = aligner
-        self._aligner = aligner_params_dict[aligner]        
+        self._aligner = aligner_params_dict[aligner]
+
+    def get_name(self):
+        return self._aligner_name
     
     def set_input_file(self, file_path, tree_file=None):
         self._input_file = str(file_path)
