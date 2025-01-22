@@ -8,6 +8,7 @@ from sklearn import linear_model, model_selection, exceptions
 from sklearn.pipeline import Pipeline
 warnings.simplefilter("ignore", category=exceptions.ConvergenceWarning)
 from scipy.stats import pearsonr
+from tqdm import tqdm
 
 from msasim import sailfish as sf
 import msastats
@@ -17,7 +18,6 @@ from aligner_interface import Aligner
 from raxml_parser import get_substitution_model
 from utility import *
 
-from tqdm import tqdm
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -68,7 +68,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
     simulator.set_replacement_model(model=substitution_model["submodel"][0],
                                     model_parameters=substitution_model.get("params", None),
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
-                                    gamma_parameters_catergories=substitution_model.get("gamma_cats", 1))
+                                    gamma_parameters_categories=substitution_model.get("gamma_cats", 1))
 
     logger.info("Starting msa simulation")
     for idx,params in enumerate(sim_params_correction):
@@ -83,6 +83,9 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
         sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines()[1::2])
         # print(sim_stats)
+        if idx == 148:
+            print(root_length, insertion_rate, deletion_rate)
+            print(sim_msa.get_msa())
         simulated_msas.append(sim_msa)
         sum_stats.append(numeric_params + sim_stats)
     logger.info(f"Done with {num_sims} msa simulations")
@@ -97,13 +100,12 @@ def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
 
     for msa in tqdm(msas):
         sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
-
         with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
             tempf.write(sim_fasta_unaligned)
             tempf.seek(0)
             sequence_aligner.set_input_file(tempf.name, tree_file=tree_path)
             realigned_msa = sequence_aligner.get_realigned_msa()
-        
+            
         realigned_msa = [s[s.index("\n"):].replace("\n","") for s in realigned_msa.split(">")[1:]]
         realigned_stats = msastats.calculate_msa_stats(realigned_msa)
         realigned_sum_stats.append(realigned_stats)

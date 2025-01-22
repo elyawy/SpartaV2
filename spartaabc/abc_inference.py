@@ -96,8 +96,8 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
         print("SIM")
         full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
         top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
-        R_ID = top_sim_data["insertion_rate"].mean()
-        A_ID = top_sim_data["length_param_insertion"].mean()
+        R_ID = float(top_sim_data["insertion_rate"].mean())
+        A_ID = float(top_sim_data["length_param_insertion"].mean())
         return IndelParams(R_ID, R_ID,
                            A_ID, A_ID,
                            length_distribution="zipf",
@@ -106,10 +106,10 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
     else:
         full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
         top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
-        R_I = top_rim_data["insertion_rate"].mean()
-        R_D = top_rim_data["deletion_rate"].mean()
-        A_I = top_rim_data["length_param_insertion"].mean()
-        A_D = top_rim_data["length_param_deletion"].mean()
+        R_I = float(top_rim_data["insertion_rate"].mean())
+        R_D = float(top_rim_data["deletion_rate"].mean())
+        A_I = float(top_rim_data["length_param_insertion"].mean())
+        A_D = float(top_rim_data["length_param_deletion"].mean())
 
         return IndelParams(R_I, R_D,
                            A_I, A_D,

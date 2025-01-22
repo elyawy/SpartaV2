@@ -1,4 +1,5 @@
 
+import random
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -34,15 +35,20 @@ def infer_indel_params(data_path: Path, aligner: str="MAFFT",
     print(indel_params)
 
 
-test_path = Path("/home/elyalab/Dev/failed_syncs/SpartaV2/test_web")
 
-# prepare_data_for_inference(data_path=test_path, number_of_simulations=100_000, number_of_correction_simulations=500)
-# prepare_data_for_inference(data_path=test_path, 
-#                            number_of_simulations=100_000, 
-#                            number_of_correction_simulations=500, 
-#                            indel_model=IndelModel(model="rim", length_distribution="zipf"))
+def standard_inference(data_path: Path, seed=random.randint(1, 1e6)):
+    prepare_data_for_inference(data_path=test_path, number_of_simulations=100_000,
+                            number_of_correction_simulations=1000, seed=seed)
+    
+    prepare_data_for_inference(data_path=test_path, 
+                            number_of_simulations=100_000, 
+                            number_of_correction_simulations=1000, 
+                            indel_model=IndelModel(model="rim", length_distribution="zipf"),
+                            seed=seed+2)
 
+    infer_indel_params(data_path=test_path)
 
-
-
-infer_indel_params(data_path=test_path)
+test_path = Path("tests/pipeline_test")
+# standard_inference(test_path)
+prepare_data_for_inference(data_path=test_path, number_of_simulations=100_000,
+                        number_of_correction_simulations=500)

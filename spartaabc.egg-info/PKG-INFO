@@ -1,8 +1,0 @@
-Metadata-Version: 2.2
-Name: spartaabc
-Version: 0.1.0
-Requires-Dist: scikit-learn
-Requires-Dist: pandas
-Requires-Dist: biopython
-Requires-Dist: msasim
-Requires-Dist: msastats
