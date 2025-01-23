@@ -25,7 +25,7 @@ def create_fake_data_path(tree: Tree) -> Path:
     """
     # Create temp directory
     data_path = Path("tests/correction_test/fake_data") / str(len(tree))
-    data_path.mkdir(exist_ok=True)
+    data_path.mkdir(exist_ok=True, parents=True)
     
     # Write tree file
     tree_path = data_path / "tree.newick"
@@ -69,7 +69,7 @@ for num_leaves in range(10,16):
     data_path = create_fake_data_path(tree)
 
     correction.compute_alignment_correction(
-        MAIN_PATH=data_path, SEED=10, SEQUENCE_TYPE="AA",
+        MAIN_PATH=data_path, SEED=5, SEQUENCE_TYPE="AA",
         NUM_SIMS=500, ALIGNER="MAFFT", LENGTH_DISTRIBUTION="zipf",
         INDEL_MODEL="SIM", KEEP_STATS=False
     )

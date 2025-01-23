@@ -56,6 +56,7 @@ def prepare_substitution_model(main_path: Path, sequence_type: str):
 
 
 def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, substitution_model: dict, seed: int):
+    print(seed)
     sim_protocol = sf.SimProtocol(tree_path, seed=seed)
     simulator = sf.Simulator(sim_protocol,
                              simulation_type=sf.SIMULATION_TYPE[substitution_model["mode"]])
@@ -85,7 +86,10 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
         # print(sim_stats)
         if idx == 148:
             print(root_length, insertion_rate, deletion_rate)
-            print(sim_msa.get_msa())
+            print(insertion_length_dist.get_dist().tolist())
+            print(deletion_length_dist.get_dist())
+
+            print(sim_msa.get_length())
         simulated_msas.append(sim_msa)
         sum_stats.append(numeric_params + sim_stats)
     logger.info(f"Done with {num_sims} msa simulations")

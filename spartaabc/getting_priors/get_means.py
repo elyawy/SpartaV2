@@ -1,6 +1,6 @@
-from spartaabc.getting_priors import geometric as geo
-from spartaabc.getting_priors import poisson as pois
-from spartaabc.getting_priors import zipf
+from getting_priors import geometric as geo
+from getting_priors import poisson as pois
+from getting_priors import zipf
 
 
 length_distributions = ["zipf", "geometric", "poisson"]
