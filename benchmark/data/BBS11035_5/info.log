@@ -1,0 +1,31 @@
+2025-01-26 19:20:17,805[INFO][main.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11035_5,
+	SEED: 30, NUM_SIMS: 100000, NUM_SIMS_CORRECTION: 500, SEQUENCE_TYPE: AA
+2025-01-26 19:20:19,221[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11035_5,
+	SEED: 30, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 19:20:19,222[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 19:20:19,263[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11035_5,
+	SEED: 32, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 19:20:19,264[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 19:20:19,362[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11035_5,
+	SEED: 31, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 19:20:19,421[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11035_5,
+	SEED: 33, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 19:20:19,443[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 19:20:19,539[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 19:20:19,873[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 19:20:19,873[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats
+2025-01-26 19:20:20,084[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 19:20:20,085[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats
+2025-01-26 19:21:26,762[INFO][simulate_data.py][simulate_data]: Done with 100000 msa simulations
+2025-01-26 19:21:38,396[INFO][simulate_data.py][simulate_data]: Done with 100000 msa simulations
+2025-01-26 19:21:40,578[INFO][abc_inference.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11035_5

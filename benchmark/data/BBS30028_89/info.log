@@ -1,0 +1,23 @@
+2025-01-26 16:40:03,387[INFO][main.py][run_pipeline_parallel]: 
+	MAIN_PATH: benchmark/data/BBS30028_89,
+	SEED: 942758, NUM_SIMS: 100000, NUM_SIMS_CORRECTION: 500, SEQUENCE_TYPE: AA
+2025-01-26 16:40:05,182[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS30028_89,
+	SEED: 942760, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL RIM
+2025-01-26 16:40:05,185[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 16:40:05,451[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS30028_89,
+	SEED: 942761, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL RIM
+2025-01-26 16:40:05,624[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 16:40:05,632[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS30028_89,
+	SEED: 942759, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL SIM
+2025-01-26 16:40:05,812[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 16:40:05,988[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS30028_89,
+	SEED: 942758, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL SIM
+2025-01-26 16:40:05,996[INFO][simulate_data.py][simulate_data]: Starting msa simulation

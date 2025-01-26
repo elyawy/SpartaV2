@@ -1,0 +1,30 @@
+2025-01-26 21:45:04,251[INFO][main.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS20007_23,
+	SEED: 12412, NUM_SIMS: 100000, NUM_SIMS_CORRECTION: 500, SEQUENCE_TYPE: AA
+2025-01-26 21:45:05,685[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS20007_23,
+	SEED: 12414, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 21:45:05,687[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 21:45:05,717[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS20007_23,
+	SEED: 12412, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 21:45:05,719[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 21:45:05,756[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS20007_23,
+	SEED: 12413, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 21:45:05,783[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS20007_23,
+	SEED: 12415, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 21:45:05,844[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 21:45:05,905[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 21:45:08,649[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 21:45:08,650[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats
+2025-01-26 21:47:04,523[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 21:47:04,525[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats
+2025-01-26 21:47:19,209[INFO][correction.py][compute_realigned_stats]: Done recomputing stats
+2025-01-26 21:47:19,209[INFO][correction.py][compute_regressors]: Performing regression on all realigned stats
+2025-01-26 21:47:29,339[INFO][correction.py][compute_regressors]: Done with regression

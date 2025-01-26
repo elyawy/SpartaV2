@@ -1,0 +1,25 @@
+2025-01-26 21:55:06,047[INFO][main.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS50013_18,
+	SEED: 124, NUM_SIMS: 100000, NUM_SIMS_CORRECTION: 500, SEQUENCE_TYPE: AA
+2025-01-26 21:55:07,476[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS50013_18,
+	SEED: 124, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 21:55:07,480[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS50013_18,
+	SEED: 126, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 21:55:07,483[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 21:55:07,483[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 21:55:07,612[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS50013_18,
+	SEED: 127, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 21:55:07,616[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS50013_18,
+	SEED: 125, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 21:55:07,695[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 21:55:07,748[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 21:55:09,501[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 21:55:09,502[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats

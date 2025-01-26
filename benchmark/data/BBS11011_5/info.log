@@ -1,0 +1,37 @@
+2025-01-26 21:59:57,241[INFO][main.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11011_5,
+	SEED: 124, NUM_SIMS: 100000, NUM_SIMS_CORRECTION: 500, SEQUENCE_TYPE: AA
+2025-01-26 21:59:58,608[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11011_5,
+	SEED: 126, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 21:59:58,615[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 21:59:58,714[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11011_5,
+	SEED: 124, NUM_SIMS: 100000,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 21:59:58,716[INFO][simulate_data.py][simulate_data]: Starting msa simulation
+2025-01-26 21:59:58,787[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11011_5,
+	SEED: 127, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL rim
+2025-01-26 21:59:58,787[INFO][correction.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11011_5,
+	SEED: 125, NUM_SIMS: 500, SEQUENCE_TYPE: AA,
+	LENGTH_DISTRIBUTION: zipf, INDEL_MODEL sim
+2025-01-26 21:59:58,865[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 21:59:58,894[INFO][correction.py][simulate_data]: Starting msa simulation
+2025-01-26 21:59:59,081[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 21:59:59,082[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats
+2025-01-26 21:59:59,116[INFO][correction.py][simulate_data]: Done with 500 msa simulations
+2025-01-26 21:59:59,117[INFO][correction.py][compute_realigned_stats]: Realigning MSAs and recomputing stats
+2025-01-26 22:00:53,755[INFO][simulate_data.py][simulate_data]: Done with 100000 msa simulations
+2025-01-26 22:01:06,627[INFO][simulate_data.py][simulate_data]: Done with 100000 msa simulations
+2025-01-26 22:01:13,293[INFO][correction.py][compute_realigned_stats]: Done recomputing stats
+2025-01-26 22:01:13,293[INFO][correction.py][compute_regressors]: Performing regression on all realigned stats
+2025-01-26 22:01:13,440[INFO][correction.py][compute_realigned_stats]: Done recomputing stats
+2025-01-26 22:01:13,440[INFO][correction.py][compute_regressors]: Performing regression on all realigned stats
+2025-01-26 22:01:18,552[INFO][correction.py][compute_regressors]: Done with regression
+2025-01-26 22:01:19,731[INFO][correction.py][compute_regressors]: Done with regression
+2025-01-26 22:01:20,932[INFO][abc_inference.py][main]: 
+	MAIN_PATH: /home/pupkolab/Dev/SpartaV2/benchmark/data/BBS11011_5
