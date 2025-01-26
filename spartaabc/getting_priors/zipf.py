@@ -39,5 +39,3 @@ def zip_mom_to_a(mom, truncation=50, init_guess=1.00000001, epsfcn=0.0000001, xt
     """
     return fsolve(lambda x: (mom - calc_zip_mom(x, mom=1, truncation=truncation)) \
                   , init_guess, epsfcn=epsfcn, xtol=xtol)[0]
-
-print(calc_zip_mom(a=1.1283, truncation=50))

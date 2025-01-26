@@ -1,11 +1,11 @@
-import os, pathlib, tempfile, functools
+import functools
 from Bio.Align.Applications import MafftCommandline
 from Bio.Align.Applications import PrankCommandline
 from Bio.Align.Applications import ClustalwCommandline
 
 
 aligner_params_dict = {
-    "MAFFT": functools.partial(MafftCommandline, globalpair=True, maxiterate=1000),
+    "MAFFT": functools.partial(MafftCommandline, globalpair=True, maxiterate=0),
     "PRANK": functools.partial(PrankCommandline, f="fasta", once=False),
     "CLUSTALW": functools.partial(ClustalwCommandline, output="FASTA")
 }

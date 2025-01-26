@@ -6,8 +6,11 @@ import pandas as pd
 import msastats
 from msasim import sailfish as sf
 
-from prior_sampler import protocol_updater
-from utility import *
+from spartaabc.prior_sampler import protocol_updater
+from spartaabc.utility import logger, setLogHandler
+from spartaabc.utility import PriorSampler, prepare_prior_sampler
+from spartaabc.utility import get_msa_path, get_tree_path
+from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
 
 from tqdm import tqdm
 

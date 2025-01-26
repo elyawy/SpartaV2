@@ -3,11 +3,11 @@ import random
 from pathlib import Path
 from dataclasses import dataclass
 
-import simulate_data
-import correction
-import abc_inference
-from abc_inference import IndelParams
-
+from spartaabc import simulate_data
+from spartaabc import correction
+from spartaabc import abc_inference
+from spartaabc.abc_inference import IndelParams
+from spartaabc.main import run_pipeline_parallel
 
 @dataclass
 class IndelModel:
@@ -48,7 +48,12 @@ def standard_inference(data_path: Path, seed=random.randint(1, 1e6)):
 
     infer_indel_params(data_path=test_path)
 
-test_path = Path("tests/pipeline_test")
-# standard_inference(test_path)
-prepare_data_for_inference(data_path=test_path, number_of_simulations=100,
-                        number_of_correction_simulations=150, keep_correction_data=True)
+def parallelized_inference(data_path: Path, SEQUENCE_TYPE: str,
+                           NUM_SIMS: int, NUM_SIMS_CORRECTION: int,
+                           INDEL_MODELS: list[str], ALIGNER:str,
+                           KEEP_STATS: bool, seed=random.randint(1, 1e6)):
+    
+    run_pipeline_parallel(data_path, SEED=seed, SEQUENCE_TYPE=SEQUENCE_TYPE,
+                          NUM_SIMS=NUM_SIMS, NUM_SIMS_CORRECTION=NUM_SIMS_CORRECTION,
+                          INDEL_MODELS=INDEL_MODELS, ALIGNER=ALIGNER,
+                          KEEP_STATS=KEEP_STATS)

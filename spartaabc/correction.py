@@ -1,23 +1,28 @@
-import os, tempfile, pickle, argparse, warnings, copy
+import os
+import tempfile
+import pickle
+import argparse
+import warnings
+import copy
+import logging
 from pathlib import Path
 import numpy as np
 import pandas as pd
-
-from sklearn.base import BaseEstimator, TransformerMixin# define the transformer
 from sklearn import linear_model, model_selection, exceptions
 from sklearn.pipeline import Pipeline
-warnings.simplefilter("ignore", category=exceptions.ConvergenceWarning)
 from scipy.stats import pearsonr
 from tqdm import tqdm
 
 from msasim import sailfish as sf
 import msastats
 
-from prior_sampler import PriorSampler, protocol_updater
-from aligner_interface import Aligner
-from raxml_parser import get_substitution_model
-from utility import *
+from spartaabc.prior_sampler import PriorSampler, protocol_updater
+from spartaabc.aligner_interface import Aligner
+from spartaabc.raxml_parser import get_substitution_model
+from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler
+from spartaabc.utility import StandardMemoryScaler, logger
 
+warnings.simplefilter("ignore", category=exceptions.ConvergenceWarning)
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -84,12 +89,6 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
         sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines()[1::2])
         # print(sim_stats)
-        if idx == 148:
-            print(root_length, insertion_rate, deletion_rate)
-            print(insertion_length_dist.get_dist().tolist())
-            print(deletion_length_dist.get_dist())
-
-            print(sim_msa.get_length())
         simulated_msas.append(sim_msa)
         sum_stats.append(numeric_params + sim_stats)
     logger.info(f"Done with {num_sims} msa simulations")

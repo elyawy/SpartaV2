@@ -1,9 +1,17 @@
-import argparse, pickle
+import argparse
+import pickle
+import logging
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 
-from utility import *
+import msastats
+from spartaabc.utility import get_msa_path
+from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
+from spartaabc.utility import logger, setLogHandler
+
+
 
 @dataclass
 class IndelParams:
@@ -14,6 +22,18 @@ class IndelParams:
     length_distribution: str
     indel_model: str
 
+    def __repr__(self):
+        model_str = f"Model: {self.indel_model}\n"
+        if self.indel_model in ["SIM", "sim"]:
+            model_str += f"R_ID: {self.insertion_rate}\n"
+            model_str += f"A_ID: {self.insertion_length_parameter}"
+        elif self.indel_model in ["RIM", "rim"]:
+            model_str += f"R_I: {self.insertion_rate}\n"
+            model_str += f"R_D: {self.deletion_rate}\n"
+            model_str += f"A_I: {self.insertion_length_parameter}\n"
+            model_str += f"A_D: {self.deletion_length_parameter}"
+
+        return model_str
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -92,17 +112,17 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
 
     top_stats[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params.csv", index=False)
 
+    abc_indel_params = None
     if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > top_cutoff // 2:
         print("SIM")
         full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
         top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
         R_ID = float(top_sim_data["insertion_rate"].mean())
         A_ID = float(top_sim_data["length_param_insertion"].mean())
-        return IndelParams(R_ID, R_ID,
-                           A_ID, A_ID,
-                           length_distribution="zipf",
-                           indel_model="SIM")
-
+        abc_indel_params = IndelParams(R_ID, R_ID,
+                                       A_ID, A_ID,
+                                       length_distribution="zipf",
+                                       indel_model="SIM")
     else:
         full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
         top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
@@ -110,12 +130,11 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
         R_D = float(top_rim_data["deletion_rate"].mean())
         A_I = float(top_rim_data["length_param_insertion"].mean())
         A_D = float(top_rim_data["length_param_deletion"].mean())
-
-        return IndelParams(R_I, R_D,
-                           A_I, A_D,
-                           length_distribution="zipf",
-                           indel_model="RIM")
-
+        abc_indel_params = IndelParams(R_I, R_D,
+                                       A_I, A_D,
+                                       length_distribution="zipf",
+                                       indel_model="RIM")
+    (main_path / "model_params.txt").write_text(str(abc_indel_params))
 
 
 def main(arg_list: list[str] | None = None):
