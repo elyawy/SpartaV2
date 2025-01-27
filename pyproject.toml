@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spartaabc"
+version = "0.3.6"
+dependencies = [
+    "scikit-learn",
+    "pandas",
+    "pyarrow",
+    "biopython",
+    "msasim",
+    "msastats",
+    "tqdm"
+]
+
+[tool.setuptools.packages.find]
+# All the following settings are optional:
+include = ["spartaabc*"]  # ["*"] by default
+exclude = ["test*"]  # empty by default
+namespaces = false  # true by default

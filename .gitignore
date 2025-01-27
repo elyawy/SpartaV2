@@ -1,5 +1,11 @@
 __pycache__
 .vscode
-
-test/
+spartaabc.egg-info/*
+dist
 test_web/
+tests/correction_test/fake_data
+benchmark/data/*/*
+!benchmark/data/*/*.fasta
+!benchmark/data/*/*.tree
+!benchmark/data/*/*.bestModel
+!benchmark/data/*/true_params.txt
