@@ -47,15 +47,8 @@ def parse_args(arg_list: list[str] | None):
 # prepare indelible control file for subsitutions:
 def prepare_substitution_model(main_path: Path, sequence_type: str):
 
-    substitution_model = get_substitution_model(main_path) if sequence_type == "NT" else {}
+    substitution_model = get_substitution_model(main_path)# if sequence_type == "NT" else {}
     substitution_model["mode"] = "DNA" if sequence_type == "NT" else "PROTEIN"
-
-    if substitution_model["mode"] == "PROTEIN":
-        substitution_model["submodel"] = sf.MODEL_CODES.WAG,
-        substitution_model["gamma_shape"] = 1.0
-        substitution_model["gamma_cats"] = 4
-    else:
-        substitution_model["params"] = substitution_model["freq"] + substitution_model["rates"]
     
     return substitution_model
 
@@ -71,7 +64,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
 
     sim_params_correction = prior_sampler.sample(num_sims)
 
-    simulator.set_replacement_model(model=substitution_model["submodel"][0],
+    simulator.set_replacement_model(model=substitution_model["submodel"],
                                     model_parameters=substitution_model.get("params", None),
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
                                     gamma_parameters_categories=substitution_model.get("gamma_cats", 1))

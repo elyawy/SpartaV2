@@ -62,9 +62,9 @@ def create_fake_data_path(tree: Tree) -> Path:
 
     return data_path        
 
-for num_leaves in range(10,16):
+for num_leaves in range(5,16):
 
-    tree = ngesh.gen_tree(1.0, 0.5, num_leaves=num_leaves, labels="human")
+    tree = ngesh.gen_tree(2.0, 2.0, num_leaves=num_leaves, labels="human")
     print(sum([node.dist for node in tree.iter_descendants()]))
     data_path = create_fake_data_path(tree)
 

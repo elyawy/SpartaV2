@@ -3,7 +3,7 @@ from pathlib import Path
 from sklearn.base import BaseEstimator, TransformerMixin# define the transformer
 import msastats
 
-from prior_sampler import PriorSampler
+from spartaabc.prior_sampler import PriorSampler
 
 MIN_LENGTH_STAT_INDEX = msastats.stats_names().index("MSA_MIN_LEN")
 MAX_LENGTH_STAT_INDEX = msastats.stats_names().index("MSA_MAX_LEN")

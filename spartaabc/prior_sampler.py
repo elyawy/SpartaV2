@@ -4,7 +4,7 @@ import random
 
 from msasim import sailfish as sf
 
-from getting_priors import get_means
+from spartaabc.getting_priors import get_means
 
 TRUNCATION = 150
 

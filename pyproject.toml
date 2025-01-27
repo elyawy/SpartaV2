@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spartaabc"
-version = "0.2.13"
+version = "0.3.6"
 dependencies = [
     "scikit-learn",
     "pandas",

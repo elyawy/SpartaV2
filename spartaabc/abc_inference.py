@@ -15,6 +15,7 @@ from spartaabc.utility import logger, setLogHandler
 
 @dataclass
 class IndelParams:
+    root_length: int
     insertion_rate: float
     deletion_rate: float
     insertion_length_parameter: float
@@ -24,6 +25,7 @@ class IndelParams:
 
     def __repr__(self):
         model_str = f"Model: {self.indel_model}\n"
+        model_str += f"Root_length: {self.root_length}\n"
         if self.indel_model in ["SIM", "sim"]:
             model_str += f"R_ID: {self.insertion_rate}\n"
             model_str += f"A_ID: {self.insertion_length_parameter}"
@@ -117,20 +119,24 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
         print("SIM")
         full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
         top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
+        root_length = int(top_sim_data["root_length"].mean())
         R_ID = float(top_sim_data["insertion_rate"].mean())
         A_ID = float(top_sim_data["length_param_insertion"].mean())
-        abc_indel_params = IndelParams(R_ID, R_ID,
+        abc_indel_params = IndelParams(root_length,
+                                       R_ID, R_ID,
                                        A_ID, A_ID,
                                        length_distribution="zipf",
                                        indel_model="SIM")
     else:
         full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
         top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
+        root_length = int(top_sim_data["root_length"].mean())
         R_I = float(top_rim_data["insertion_rate"].mean())
         R_D = float(top_rim_data["deletion_rate"].mean())
         A_I = float(top_rim_data["length_param_insertion"].mean())
         A_D = float(top_rim_data["length_param_deletion"].mean())
-        abc_indel_params = IndelParams(R_I, R_D,
+        abc_indel_params = IndelParams(root_length,
+                                       R_I, R_D,
                                        A_I, A_D,
                                        length_distribution="zipf",
                                        indel_model="RIM")

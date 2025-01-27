@@ -1,6 +1,13 @@
 import os
 import re
+from pathlib import Path
 
+from msasim import sailfish as sf
+
+MODEL_MAPPER = {
+    "WAG": sf.MODEL_CODES.WAG,
+    "LG": sf.MODEL_CODES.LG
+}
 
 def parse_raxmlNG_output(res_filepath):
 
@@ -70,24 +77,78 @@ def parse_raxmlNG_content(content):
 
 
 
-def get_substitution_model(path):
-    joined_path = os.path.join(path,"T1.raxml.log")
 
-    res_dict = parse_raxmlNG_output(joined_path)
+def parse_raxml_bestModel(model_path: Path):
+    try:
+        model_file = next(model_path.glob("*.bestModel"))
+    except StopIteration as e:
+        raise Exception(f"No substitution model provided in {model_path}, please specify a model using the RaxML-ng bestModel format.")
 
-    x,y,z,m,n,k = res_dict["subAC"],res_dict["subAG"],res_dict["subAT"],res_dict["subCG"],res_dict["subCT"], res_dict["subGT"]
-    x,y,z,m,n,k = float(x),float(y),float(z),float(m),float(n),float(k)
-    pi_A,pi_C,pi_G,pi_T = res_dict["fA"],res_dict["fC"],res_dict["fG"],res_dict["fT"]
-    pi_A,pi_C,pi_G,pi_T = float(pi_A),float(pi_C),float(pi_G),float(pi_T)
-
-    a,b,c,d,e = (n/y)*(pi_G/pi_T), (z/y)*(pi_G/pi_T), (1.0/y)*(pi_G/pi_T), (x/y)*(pi_G/pi_C), (m/y)
-
-    subtitution_model = {
-        "freq": (pi_A, pi_C, pi_G, pi_T),
-        "rates": (x,y,z,m,n,k),
-        "inv_prop": res_dict["pInv"],
-        "gamma_shape": res_dict["gamma"],
-        "gamma_cats": res_dict["cats"],
-        "submodel": "GTR"
+        # Initialize results dictionary
+    results = {
+        'submodel': None,
+        'empirical_frequencies': False,
+        'gamma_cats': 1,
+        'gamma_shape': 1.0,
+        'partition': None
     }
-    return subtitution_model
+    
+    # Split into model and partition if partition exists
+    parts = model_file.read_text().split(',')
+    model_part = parts[0].strip()
+    
+    # Parse partition information if present
+    if len(parts) > 1:
+        partition_part = parts[1].strip()
+        results['partition'] = partition_part
+    
+    # Split model into components
+    model_components = model_part.split('+')
+    
+    # First component is always the substitution model
+    results['submodel'] = MODEL_MAPPER[model_components[0]]
+    
+    # Parse remaining components
+    for component in model_components[1:]:
+        # Check for empirical frequencies
+        if component == 'FC':
+            results['empirical_frequencies'] = True
+        
+        # Check for gamma categories and alpha
+        elif component.startswith('G'):
+            # Extract number of categories
+            gamma_info = component.split('m')
+            results['gamma_cats'] = int(gamma_info[0][1:])  # Remove 'G' and convert to int
+            
+            # Extract alpha if present
+            if len(gamma_info) > 1:
+                alpha_str = gamma_info[1].strip('{}')
+                results['gamma_shape'] = float(alpha_str)
+    
+    return results
+    
+
+
+
+def get_substitution_model(path):
+    return parse_raxml_bestModel(path)
+    # joined_path = os.path.join(path,"T1.raxml.log")
+
+    # res_dict = parse_raxmlNG_output(joined_path)
+
+    # x,y,z,m,n,k = res_dict["subAC"],res_dict["subAG"],res_dict["subAT"],res_dict["subCG"],res_dict["subCT"], res_dict["subGT"]
+    # x,y,z,m,n,k = float(x),float(y),float(z),float(m),float(n),float(k)
+    # pi_A,pi_C,pi_G,pi_T = res_dict["fA"],res_dict["fC"],res_dict["fG"],res_dict["fT"]
+    # pi_A,pi_C,pi_G,pi_T = float(pi_A),float(pi_C),float(pi_G),float(pi_T)
+
+    # a,b,c,d,e = (n/y)*(pi_G/pi_T), (z/y)*(pi_G/pi_T), (1.0/y)*(pi_G/pi_T), (x/y)*(pi_G/pi_C), (m/y)
+
+    # subtitution_model = {
+    #     "freq": (pi_A, pi_C, pi_G, pi_T),
+    #     "rates": (x,y,z,m,n,k),
+    #     "inv_prop": res_dict["pInv"],
+    #     "gamma_shape": res_dict["gamma"],
+    #     "gamma_cats": res_dict["cats"],
+    #     "submodel": "GTR"
+    # }
+    # return subtitution_model

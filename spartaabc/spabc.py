@@ -37,16 +37,16 @@ def infer_indel_params(data_path: Path, aligner: str="MAFFT",
 
 
 def standard_inference(data_path: Path, seed=random.randint(1, 1e6)):
-    prepare_data_for_inference(data_path=test_path, number_of_simulations=100_000,
+    prepare_data_for_inference(data_path=data_path, number_of_simulations=100_000,
                             number_of_correction_simulations=1000, seed=seed, keep_correction_data=True)
     
-    prepare_data_for_inference(data_path=test_path, 
+    prepare_data_for_inference(data_path=data_path, 
                             number_of_simulations=100_000, 
                             number_of_correction_simulations=1000, 
                             indel_model=IndelModel(model="rim", length_distribution="zipf"),
                             seed=seed+2, keep_correction_data=True)
 
-    infer_indel_params(data_path=test_path)
+    infer_indel_params(data_path=data_path)
 
 def parallelized_inference(data_path: Path, SEQUENCE_TYPE: str,
                            NUM_SIMS: int, NUM_SIMS_CORRECTION: int,
