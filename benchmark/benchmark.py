@@ -105,11 +105,11 @@ def create_fake_data_path(data_path: Path) -> Path:
     return data_path        
 
 
-# for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
-#     print(idx)
-#     print(dir.stem)
-#     create_fake_data_path(dir) # generate simulated data if missing
+for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
+    print(idx)
+    print(dir.stem)
+    # create_fake_data_path(dir) # generate simulated data if missing
 
-test_path = Path("benchmark/data/BBS20002_20")
+# test_path = Path("benchmark/data/BBS20002_20")
 
-parallelized_inference(test_path, "AA", 100_000, 500, ["sim", "rim"], "mafft", True)
+# parallelized_inference(test_path, "AA", 100_000, 500, ["sim", "rim"], "mafft", True)
