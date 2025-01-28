@@ -48,7 +48,7 @@ def create_fake_data_path(data_path: Path) -> Path:
     tree_path = get_tree_path(data_path)
     substitution_model = get_substitution_model(data_path)
     print(substitution_model)
-    # scale_tree(tree_path, scale_factor=5.0/10.0, overwrite=True)
+    # scale_tree(tree_path, scale_factor=2.0, overwrite=True)
 
     seed = random.randint(1,1e6)
     selected_model = "sim" if random.random() < 0.5 else "rim"
@@ -105,7 +105,8 @@ def create_fake_data_path(data_path: Path) -> Path:
     return data_path        
 
 
-# for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
-#     print(idx)
-#     print(dir.stem)
-#     create_fake_data_path(dir) # generate simulated data if missing
+random.seed(42)
+for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
+    print(idx)
+    print(dir.stem)
+    create_fake_data_path(dir) # generate simulated data if missing
