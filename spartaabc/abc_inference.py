@@ -65,11 +65,27 @@ def load_correction_regressors(main_path: Path, aligner: str):
             regressors[model] = pickle.load(f)
     return regressors
 
-def bias_correction(regressors, data: pd.DataFrame):
+def load_correction_regressor_scores(main_path: Path, aligner: str):
+    scores = pd.DataFrame(len(SUMSTATS_LIST)*[1.0], columns=["pearsonr"])
+    for score_path in (main_path / f"{aligner}_correction").glob("*.csv"):
+        score_df = pd.read_csv(score_path, index_col=0)[["pearsonr"]]
+        scores[scores["pearsonr"] > score_df["pearsonr"]] = score_df
+
+    return scores["pearsonr"].to_list()
+
+def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float]):
     data = data.to_numpy()
-    temp_data = np.array([regressor.predict(data).T for regressor in regressors])
-    temp_data = pd.DataFrame(temp_data.T, columns=SUMSTATS_LIST)
-    return temp_data
+
+    kept_stats = []
+    infered_data = []
+    for idx, regressor in enumerate(regressors):
+        if regressor_scores[idx] > 0.8:
+            kept_stats.append(idx)
+            infered_data.append(regressor.predict(data).T)
+
+    temp_data = np.array(infered_data)
+    temp_data = pd.DataFrame(temp_data.T, columns=[SUMSTATS_LIST[i] for i in kept_stats])
+    return temp_data, kept_stats
 
 def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff: int=100) -> IndelParams:
 
@@ -80,6 +96,7 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
 
     stats_data = load_data(main_path)
     regressors = load_correction_regressors(main_path, aligner)
+    regressor_scores = load_correction_regressor_scores(main_path, aligner)
 
     params_data = []
     full_stats_data = []
@@ -88,9 +105,11 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
         params_data.append(stats_data[model][PARAMS_LIST])
 
         if current_regressors is not None:
-            temp_df = bias_correction(current_regressors, stats_data[model])
+            temp_df, kept_statistics = bias_correction(current_regressors, stats_data[model], regressor_scores)
             full_stats_data.append(temp_df)
     
+    empirical_stats = [empirical_stats[i] for i in kept_statistics]
+
     params_data = pd.concat(params_data)
     full_stats_data = pd.concat(full_stats_data)
 
@@ -116,7 +135,6 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
 
     abc_indel_params = None
     if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > (top_cutoff // 2):
-        print("SIM")
         full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
         top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
         root_length = int(top_sim_data["root_length"].mean())

@@ -10,7 +10,7 @@ from spartaabc.prior_sampler import PriorSampler
 from spartaabc.aligner_interface import Aligner
 from spartaabc.abc_inference import IndelParams
 from spartaabc.spabc import parallelized_inference
-from spartaabc.raxml_parser import parse_raxml_bestModel
+from spartaabc.raxml_parser import get_substitution_model
 
 def scale_tree(tree_path: str, scale_factor: float, overwrite: bool=False):
     # Read the tree
@@ -46,9 +46,9 @@ def create_fake_data_path(data_path: Path) -> Path:
     
     """
     tree_path = get_tree_path(data_path)
-    substitution_model = parse_raxml_bestModel(data_path)
+    substitution_model = get_substitution_model(data_path)
     print(substitution_model)
-    # scale_tree(tree_path, scale_factor=10.0, overwrite=True)
+    # scale_tree(tree_path, scale_factor=5.0/10.0, overwrite=True)
 
     seed = random.randint(1,1e6)
     selected_model = "sim" if random.random() < 0.5 else "rim"
@@ -105,11 +105,7 @@ def create_fake_data_path(data_path: Path) -> Path:
     return data_path        
 
 
-for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
-    print(idx)
-    print(dir.stem)
-    # create_fake_data_path(dir) # generate simulated data if missing
-
-# test_path = Path("benchmark/data/BBS20002_20")
-
-# parallelized_inference(test_path, "AA", 100_000, 500, ["sim", "rim"], "mafft", True)
+# for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
+#     print(idx)
+#     print(dir.stem)
+#     create_fake_data_path(dir) # generate simulated data if missing
