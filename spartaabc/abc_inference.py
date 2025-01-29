@@ -79,7 +79,7 @@ def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float
     kept_stats = []
     infered_data = []
     for idx, regressor in enumerate(regressors):
-        if regressor_scores[idx] > 0.85:
+        if regressor_scores[idx] > 0.80:
             kept_stats.append(idx)
             infered_data.append(regressor.predict(data).T)
 
