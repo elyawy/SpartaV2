@@ -5,8 +5,21 @@ from pathlib import Path
 from msasim import sailfish as sf
 
 MODEL_MAPPER = {
+    # Protein models
     "WAG": sf.MODEL_CODES.WAG,
-    "LG": sf.MODEL_CODES.LG
+    "LG": sf.MODEL_CODES.LG,
+    "cpREV": sf.MODEL_CODES.CPREV45,
+    "Dayhoff": sf.MODEL_CODES.DAYHOFF,
+    "HIVb": sf.MODEL_CODES.HIVB,
+    "HIVw": sf.MODEL_CODES.HIVW,
+    "JTT": sf.MODEL_CODES.JONES,
+    "mtREV": sf.MODEL_CODES.MTREV24,
+    # Nucleotide models
+    "JC": sf.MODEL_CODES.NUCJC,
+    "HKY": sf.MODEL_CODES.HKY,
+    "GTR": sf.MODEL_CODES.GTR,
+
+
 }
 
 def parse_raxmlNG_output(res_filepath):
@@ -106,7 +119,10 @@ def parse_raxml_bestModel(model_path: Path):
     model_components = model_part.split('+')
     
     # First component is always the substitution model
-    results['submodel'] = MODEL_MAPPER[model_components[0]]
+    results['submodel'] = MODEL_MAPPER.get(model_components[0], -1)
+    if (results['submodel']) == -1:
+        raise RuntimeError("The requested model has not been implemented :(")
+
     
     # Parse remaining components
     for component in model_components[1:]:

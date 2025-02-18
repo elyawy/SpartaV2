@@ -12,7 +12,6 @@ from spartaabc.utility import PriorSampler, prepare_prior_sampler
 from spartaabc.utility import get_msa_path, get_tree_path
 from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
 
-from tqdm import tqdm
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -42,7 +41,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
     length_distribution_sampler = prior_sampler.sample_length_distributions()
 
     logger.info("Starting msa simulation")
-    for _ in tqdm(range(num_sims)):
+    for _ in range(num_sims):
         root_length = next(root_sampler)
         insertion_rate, deletion_rate = next(indel_rate_sampler)
         lendist, insertion_length_dist, deletion_length_dist = next(length_distribution_sampler)

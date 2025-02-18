@@ -11,7 +11,6 @@ import pandas as pd
 from sklearn import linear_model, model_selection, exceptions
 from sklearn.pipeline import Pipeline
 from scipy.stats import pearsonr
-from tqdm import tqdm
 
 from msasim import sailfish as sf
 import msastats
@@ -94,7 +93,7 @@ def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
     logger.info("Realigning MSAs and recomputing stats")
     realigned_sum_stats = []
 
-    for msa in tqdm(msas):
+    for msa in msas:
         sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
         with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
             tempf.write(sim_fasta_unaligned)
