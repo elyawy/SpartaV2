@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spartaabc"
-version = "0.4.0"
+version = "0.4.1"
+readme = "README.md"
+license = "AFL-3.0"
 dependencies = [
     "scikit-learn",
     "pandas",

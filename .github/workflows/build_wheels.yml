@@ -1,4 +1,4 @@
-name: Build #and upload to PyPI
+name: Build and upload to PyPI
 
 
 on:
@@ -22,9 +22,7 @@ jobs:
     needs: release_tag
     name: Build wheels
     runs-on: "ubuntu-latest"
-    
-        # macos-13 is an intel runner, macos-14 is apple silicon
-
+  
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
@@ -54,5 +52,5 @@ jobs:
           with:
             name: spartaabc
             path: dist
-            
+
         - uses: pypa/gh-action-pypi-publish@release/v1
