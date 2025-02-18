@@ -38,6 +38,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./dist/spartaabc-*
+          name: spartaabc
+
 
 
   upload_pypi:
@@ -50,7 +52,6 @@ jobs:
       steps:
         - uses: actions/download-artifact@v4
           with:
-            pattern: spartaabc-*
-            path: dist
+            name: spartaabc
 
         - uses: pypa/gh-action-pypi-publish@release/v1
