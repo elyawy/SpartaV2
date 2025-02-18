@@ -1,0 +1,111 @@
+name: Build #and upload to PyPI
+
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release_tag:
+    runs-on: [ubuntu-latest]
+    steps:
+    - name: Generate release tag
+      id: generate_release_tag
+      uses: alexvingg/next-release-tag@v1.0.4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      date_tag: ${{ steps.generate_release_tag.outputs.release_tag }}
+
+  build_wheels:
+    needs: release_tag
+    name: Build wheels on ${{ matrix.config.os }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - {
+              os: "ubuntu-latest",
+              id: "linux-x86-64"
+            }
+          - {
+              os: "windows-latest",
+              id: "windows-x86-64"
+            }
+          - {
+              os: "macos-14",
+              id: "macos-arm-64"
+            }
+          - {
+              os: "macos-13",
+              id: "macos-x86-64"
+            }
+        # macos-13 is an intel runner, macos-14 is apple silicon
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.17.0
+        with:
+          config-file: "pyproject.toml"
+ 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.config.os }}
+          path: ./wheelhouse/*.whl
+
+
+      - name: Archive Wheels
+        uses: thedoctor0/zip-release@0.7.5
+        with:
+          type: 'zip'
+          filename: '${{ matrix.config.id }}-wheels.zip'
+          path: wheelhouse
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.release_tag.outputs.date_tag }}
+          name: Release ${{ needs.release_tag.outputs.date_tag }}
+          files: '${{ matrix.config.id }}-wheels.zip'
+
+
+
+
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Optional, use if you use setuptools_scm
+        submodules: true  # Optional, use if you have submodules
+
+    - name: Build SDist
+      run: pipx run build --sdist
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-sdist
+        path: dist/*.tar.gz
+
+  upload_pypi:
+      needs: [build_wheels, make_sdist]
+      runs-on: ubuntu-latest
+      environment: pypi
+      permissions:
+        id-token: write
+      # or, alternatively, upload to PyPI on every tag starting with 'v' (remove on: release above to use this)
+      steps:
+        - uses: actions/download-artifact@v4
+          with:
+            # unpacks all CIBW artifacts into dist/
+            pattern: cibw-*
+            path: dist
+            merge-multiple: true
+
+        - uses: pypa/gh-action-pypi-publish@release/v1
