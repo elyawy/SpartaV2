@@ -9,3 +9,4 @@ benchmark/data/*/*
 !benchmark/data/*/*.tree
 !benchmark/data/*/*.bestModel
 !benchmark/data/*/true_params.txt
+build/
