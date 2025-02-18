@@ -37,13 +37,8 @@ jobs:
           python -m build
       - uses: actions/upload-artifact@v4
         with:
-          path: ./dist/*.whl
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ needs.release_tag.outputs.date_tag }}
-          name: Release ${{ needs.release_tag.outputs.date_tag }}
-          files: ./dist/*.tar.gz
+          path: ./dist/spartaabc-*
+
 
   upload_pypi:
       needs: [build_wheels]
