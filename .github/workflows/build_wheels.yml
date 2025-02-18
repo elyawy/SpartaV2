@@ -53,5 +53,6 @@ jobs:
         - uses: actions/download-artifact@v4
           with:
             name: spartaabc
-
+            path: dist
+            
         - uses: pypa/gh-action-pypi-publish@release/v1
