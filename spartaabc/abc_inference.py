@@ -73,13 +73,13 @@ def load_correction_regressor_scores(main_path: Path, aligner: str):
 
     return scores["pearsonr"].to_list()
 
-def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float]):
+def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float], r_threshold=0.8):
     data = data.to_numpy()
 
     kept_stats = []
     infered_data = []
     for idx, regressor in enumerate(regressors):
-        if regressor_scores[idx] > 0.80:
+        if regressor_scores[idx] > r_threshold:
             kept_stats.append(idx)
             infered_data.append(regressor.predict(data).T)
 
