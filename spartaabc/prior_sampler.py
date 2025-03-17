@@ -46,7 +46,7 @@ def protocol_updater(protocol: sf.SimProtocol, params: list) -> None:
 class PriorSampler:
     def __init__(self, conf_file=None,
                        len_dist="zipf",
-                       rate_priors=[[-3,-1],[-1,1]], # log
+                       rate_priors=[[-4,-1],[-1,1]], # log
                        seq_lengths=[100,500],
                        indel_model="sim",
                        seed = 1):
