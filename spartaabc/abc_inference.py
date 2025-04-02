@@ -42,6 +42,8 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-i','--input', action='store',metavar="Input folder", type=str, required=True)
     _parser.add_argument('-a','--aligner', action='store',metavar="Aligner", type=str,default="mafft" , required=False)
     _parser.add_argument('-d','--distance', action='store',metavar="Distance metric", type=str, default="mahal", required=False)
+    _parser.add_argument('-noc','--no-correction',metavar="Do not use alignment bias correction" ,
+                         type=bool, required=False, action='store_false')
 
 
     args = _parser.parse_args()
@@ -87,7 +89,7 @@ def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float
     temp_data = pd.DataFrame(temp_data.T, columns=[SUMSTATS_LIST[i] for i in kept_stats])
     return temp_data, kept_stats
 
-def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff: int=100) -> IndelParams:
+def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=True, top_cutoff: int=100) -> IndelParams:
 
 
     MSA_PATH = get_msa_path(main_path)
@@ -95,11 +97,15 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
     empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
 
     stats_data = load_data(main_path)
-    regressors = load_correction_regressors(main_path, aligner)
-    regressor_scores = load_correction_regressor_scores(main_path, aligner)
+    if correction:
+        regressors = load_correction_regressors(main_path, aligner)
+        regressor_scores = load_correction_regressor_scores(main_path, aligner)
+    else:
+        regressors = {}
 
     params_data = []
     full_stats_data = []
+    kept_statistics = range(len(SUMSTATS_LIST))
     for model in  stats_data.keys():
         current_regressors = regressors.get(model, None)
         params_data.append(stats_data[model][PARAMS_LIST])
@@ -107,7 +113,7 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", top_cutoff:
         if current_regressors is not None:
             temp_df, kept_statistics = bias_correction(current_regressors, stats_data[model], regressor_scores)
             full_stats_data.append(temp_df)
-    
+
     empirical_stats = [empirical_stats[i] for i in kept_statistics]
 
     params_data = pd.concat(params_data)
@@ -170,13 +176,14 @@ def main(arg_list: list[str] | None = None):
     MAIN_PATH = Path(args.input).resolve()
     ALIGNER = args.aligner
     DISTANCE_METRIC = args.distance
+    CORRECTION = not args.no_correction
 
     setLogHandler(MAIN_PATH)
     logger.info("\n\tMAIN_PATH: {}".format(
         MAIN_PATH
     ))
 
-    run(MAIN_PATH, ALIGNER, DISTANCE_METRIC)
+    run(MAIN_PATH, ALIGNER, DISTANCE_METRIC, CORRECTION)
 
 
 if __name__ == "__main__":

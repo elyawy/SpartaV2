@@ -12,6 +12,8 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-t','--type', action='store',metavar="Type of MSA NT/AA" , type=str, required=True)
     _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
     _parser.add_argument('-nc','--numsim-correction', action='store',metavar="Number of correction simulations" , type=int, required=True)
+    _parser.add_argument('-noc','--no-correction',metavar="Do not perform alignment bias correction" ,
+                         type=bool, required=False, action='store_false')
 
     _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=True)
     _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, default="mafft", required=False)
@@ -45,6 +47,7 @@ def run_pipeline_parallel(MAIN_PATH: Path, SEED: int, SEQUENCE_TYPE: str,
         simulate_cmd = [interpreter, CURRENT_SCRIPT_DIR / "simulate_data.py",
                         "-i", str(MAIN_PATH), "-n", str(NUM_SIMS),
                         "-s", str(SEED), "-l", "zipf", "-m", f"{model}"]
+        
     
         correction_cmd_sim = [interpreter, CURRENT_SCRIPT_DIR / "correction.py",
                               "-i", str(MAIN_PATH), "-n", str(NUM_SIMS_CORRECTION),
@@ -74,12 +77,12 @@ def main(arg_list: list[str] | None = None):
     SEQUENCE_TYPE = args.type
     NUM_SIMS = args.numsim
     NUM_SIMS_CORRECTION = args.numsim_correction
+    CORRECTION = not args.no_correction
 
     ALIGNER = args.aligner.upper()
     KEEP_STATS = args.keep_stats
     VERBOSE = args.verbose
 
-    print()
 
     setLogHandler(MAIN_PATH, "w")
     logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, NUM_SIMS_CORRECTION: {}, SEQUENCE_TYPE: {}".format(
@@ -94,6 +97,8 @@ def main(arg_list: list[str] | None = None):
                         "-i", str(MAIN_PATH), "-n", str(NUM_SIMS),
                         "-s", str(SEED), "-l", "zipf", "-m", f"{model}"]
     
+        if not CORRECTION:
+            continue
         correction_cmd_sim = [interpreter, CURRENT_SCRIPT_DIR / "correction.py",
                               "-i", str(MAIN_PATH), "-n", str(NUM_SIMS_CORRECTION),
                               "-s", str(SEED+1), "-l", "zipf", "-m", f"{model}",
@@ -105,7 +110,9 @@ def main(arg_list: list[str] | None = None):
 
     exit_codes = [p.wait() for p in processes]
     
-    abc_cmd = [interpreter, CURRENT_SCRIPT_DIR / "abc_inference.py", "-i", str(MAIN_PATH)]
+    abc_cmd = [interpreter, CURRENT_SCRIPT_DIR / "abc_inference.py",
+               "-i", str(MAIN_PATH),
+               ]
     subprocess.run(abc_cmd)
 
 
