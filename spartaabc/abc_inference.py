@@ -42,8 +42,7 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-i','--input', action='store',metavar="Input folder", type=str, required=True)
     _parser.add_argument('-a','--aligner', action='store',metavar="Aligner", type=str,default="mafft" , required=False)
     _parser.add_argument('-d','--distance', action='store',metavar="Distance metric", type=str, default="mahal", required=False)
-    _parser.add_argument('-noc','--no-correction',metavar="Do not use alignment bias correction" ,
-                         type=bool, required=False, action='store_false')
+    _parser.add_argument('-noc','--no-correction', action='store_false')
 
 
     args = _parser.parse_args()

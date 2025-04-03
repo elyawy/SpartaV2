@@ -12,8 +12,7 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-t','--type', action='store',metavar="Type of MSA NT/AA" , type=str, required=True)
     _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
     _parser.add_argument('-nc','--numsim-correction', action='store',metavar="Number of correction simulations" , type=int, required=True)
-    _parser.add_argument('-noc','--no-correction',metavar="Do not perform alignment bias correction" ,
-                         type=bool, required=False, action='store_false')
+    _parser.add_argument('-noc','--no-correction', action='store_false')
 
     _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=True)
     _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, default="mafft", required=False)
