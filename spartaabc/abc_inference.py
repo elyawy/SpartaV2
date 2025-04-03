@@ -116,8 +116,11 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
     empirical_stats = [empirical_stats[i] for i in kept_statistics]
 
     params_data = pd.concat(params_data)
-    full_stats_data = pd.concat(full_stats_data)
-
+    if correction:
+        full_stats_data = pd.concat(full_stats_data)
+    else:
+        full_stats_data = [val[SUMSTATS_LIST] for key, val in stats_data.items()]
+        full_stats_data = pd.concat(full_stats_data)
     calculated_distances = None
 
     if distance_metric == "mahal":
@@ -175,14 +178,14 @@ def main(arg_list: list[str] | None = None):
     MAIN_PATH = Path(args.input).resolve()
     ALIGNER = args.aligner
     DISTANCE_METRIC = args.distance
-    CORRECTION = not args.no_correction
+    CORRECTION = args.no_correction
 
     setLogHandler(MAIN_PATH)
     logger.info("\n\tMAIN_PATH: {}".format(
         MAIN_PATH
     ))
 
-    run(MAIN_PATH, ALIGNER, DISTANCE_METRIC, CORRECTION)
+    run(MAIN_PATH, ALIGNER, DISTANCE_METRIC, correction=CORRECTION)
 
 
 if __name__ == "__main__":

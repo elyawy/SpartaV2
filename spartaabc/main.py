@@ -76,7 +76,7 @@ def main(arg_list: list[str] | None = None):
     SEQUENCE_TYPE = args.type
     NUM_SIMS = args.numsim
     NUM_SIMS_CORRECTION = args.numsim_correction
-    CORRECTION = not args.no_correction
+    CORRECTION = args.no_correction
 
     ALIGNER = args.aligner.upper()
     KEEP_STATS = args.keep_stats
@@ -97,7 +97,10 @@ def main(arg_list: list[str] | None = None):
                         "-s", str(SEED), "-l", "zipf", "-m", f"{model}"]
     
         if not CORRECTION:
+            SEED += 1
+            processes.append(subprocess.Popen(simulate_cmd))
             continue
+        
         correction_cmd_sim = [interpreter, CURRENT_SCRIPT_DIR / "correction.py",
                               "-i", str(MAIN_PATH), "-n", str(NUM_SIMS_CORRECTION),
                               "-s", str(SEED+1), "-l", "zipf", "-m", f"{model}",
