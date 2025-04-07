@@ -5,26 +5,6 @@ from typing import Dict
 
 from msasim import sailfish as sf
 
-from spartaabc.getting_priors import get_means
-
-# Default truncation value, can be overridden in config
-DEFAULT_TRUNCATION = 150
-
-length_distribution_priors = {
-    "zipf": {
-        "insertion": sorted(get_means.final_priors["zipf"]),
-        "deletion": sorted(get_means.final_priors["zipf"])
-    },
-    "geometric": {
-        "insertion": sorted(get_means.final_priors["geometric"]),
-        "deletion": sorted(get_means.final_priors["geometric"])
-    },
-    "poisson": {
-        "insertion": sorted(get_means.final_priors["poisson"]),
-        "deletion": sorted(get_means.final_priors["poisson"])
-    }
-}
-
 
 def fast_zipf(a_param, truncation):
     harmonic_series = np.arange(1, truncation+1)
@@ -32,12 +12,18 @@ def fast_zipf(a_param, truncation):
     harmonic_sum = np.sum(harmonic_series)
     return harmonic_series / harmonic_sum
 
+def fast_geo(p_param, truncation):
+    geometric_series = np.arange(1, truncation+1)
+    geometric_series = np.power((1-p_param), (geometric_series-1))* p_param
+    geometric_sum = np.sum(geometric_series)
+    return geometric_series / geometric_sum
 
-length_dist_mapper = {
-    "zipf": sf.CustomDistribution,
-    "poisson": sf.PoissonDistribution,
-    "geometric": sf.GeometricDistribution
+len_dist_mapper = {
+    "zipf": fast_zipf,
+    "geometric": fast_geo
 }
+
+
 
 
 def protocol_updater(protocol: sf.SimProtocol, params: list) -> None:
@@ -81,18 +67,19 @@ class SamplingMethod:
 class PriorSampler:
     def __init__(self, conf_file=None,
                  len_dist="zipf",
-                 rate_priors=[[-4, -1], [-1, 1]],  # log
+                 rate_priors=[[0.0, 0.05], [-1, 1]],
+                 length_distribution_priors=[1.001,2.0],
+                 truncation=50,
                  seq_lengths=[100, 500],
                  indel_model="sim",
-                 seed=1,
-                 truncation=DEFAULT_TRUNCATION):
+                 seed=1):
         self.seed = seed
         random.seed(seed)
         self.indel_model = indel_model
         self.truncation = truncation
 
         # Set length distribution and indel model directly, not from config
-        self.length_distribution = length_dist_mapper[len_dist]
+        self.length_distribution = sf.CustomDistribution
         self.len_dist = len_dist
         self.indel_model = indel_model
         self.seq_lengths = seq_lengths
@@ -105,7 +92,7 @@ class PriorSampler:
             },
             "indel_rates": {
                 "sum_rates": {
-                    "method": "log_uniform",
+                    "method": "uniform",
                     "range": rate_priors[0]
                 },
                 "ratio_rates": {
@@ -114,16 +101,11 @@ class PriorSampler:
                 }
             },
             "length_distribution_params": {
-                "insertion": {
+                    "distribution": len_dist,
                     "method": "uniform",
-                    "range": length_distribution_priors[len_dist]["insertion"]
-                },
-                "deletion": {
-                    "method": "uniform",
-                    "range": length_distribution_priors[len_dist]["deletion"]
-                }
+                    "range": length_distribution_priors,
+                    "truncation": truncation
             },
-            "truncation": truncation  # Add truncation parameter to config
         }
 
         # Load configuration from file if provided
@@ -161,8 +143,6 @@ class PriorSampler:
         # Note: length_distribution and indel_model are already set in __init__
         # and are not read from the config file
         
-        # Get truncation value
-        self.truncation = self.config.get("truncation", DEFAULT_TRUNCATION)
         
         # Set sequence length prior - using constructor-provided seq_lengths
         # Do not override with config values
@@ -187,15 +167,12 @@ class PriorSampler:
         )
         self.ratio_rates_range = self.config["indel_rates"]["ratio_rates"]["range"]
         
-        self.ins_dist_sampler = SamplingMethod.get_sampler(
-            self.config["length_distribution_params"]["insertion"]["method"]
-        )
-        self.ins_dist_range = self.config["length_distribution_params"]["insertion"]["range"]
-        
-        self.del_dist_sampler = SamplingMethod.get_sampler(
-            self.config["length_distribution_params"]["deletion"]["method"]
-        )
-        self.del_dist_range = self.config["length_distribution_params"]["deletion"]["range"]
+        self.len_dist = self.config["length_distribution_params"]["distribution"]
+
+        self.length_param_sampler = SamplingMethod.get_sampler(self.config["length_distribution_params"]["method"])
+        self.length_param_prior = self.config["length_distribution_params"]["range"]
+        self.truncation = self.config["length_distribution_params"]["truncation"]
+
 
     def sample_root_length(self):
         while True:
@@ -204,17 +181,20 @@ class PriorSampler:
 
     def sample_length_distributions(self):
         while True:
-            x = self.ins_dist_sampler(*self.ins_dist_range)
+            x = self.length_param_sampler(*self.length_param_prior)
             
             if self.indel_model == "sim":
-                indel_length_dist = self.length_distribution(fast_zipf(x, self.truncation))
+                probabilities = len_dist_mapper[self.len_dist](x, self.truncation)
+                indel_length_dist = self.length_distribution(probabilities)
                 indel_length_dist.p = x
                 yield self.len_dist, indel_length_dist, indel_length_dist
             else:
-                y = self.del_dist_sampler(*self.del_dist_range)
-                indel_length_dist_insertion = self.length_distribution(fast_zipf(x, self.truncation))
+                y = self.length_param_sampler(*self.length_param_prior)
+                probabilities = len_dist_mapper[self.len_dist](x, self.truncation)
+                indel_length_dist_insertion = self.length_distribution(probabilities)
                 indel_length_dist_insertion.p = x
-                indel_length_dist_deletion = self.length_distribution(fast_zipf(y, self.truncation))
+                probabilities = len_dist_mapper[self.len_dist](y, self.truncation)
+                indel_length_dist_deletion = self.length_distribution(probabilities)
                 indel_length_dist_deletion.p = y
                 yield self.len_dist, indel_length_dist_insertion, indel_length_dist_deletion
 
@@ -222,7 +202,6 @@ class PriorSampler:
         while True:
             sum_of_rates = self.sum_rates_sampler(*self.sum_rates_range)                
             ratio_of_rates = self.ratio_rates_sampler(*self.ratio_rates_range)
-            
             
             if self.indel_model == "sim":
                 # In the "sim" case, we set both insertion and deletion rates equal to sum_of_rates
@@ -261,15 +240,14 @@ class PriorSampler:
         """Provide a string representation of the PriorSampler object."""
         representation = [
             f"PriorSampler(seed={self.seed})",
-            f"  Length Distribution: {self.len_dist}",
             f"  Indel Model: {self.indel_model}",
-            f"  Truncation: {self.truncation}",
             f"  Sequence Length: {self.sequence_length_prior}",
             "  Indel Rates:",
             f"    Sum Rates: method={self.config['indel_rates']['sum_rates']['method']}, range={self.sum_rates_range}",
             f"    Ratio Rates: method={self.config['indel_rates']['ratio_rates']['method']}, range={self.ratio_rates_range}",
             "  Length Distribution Parameters:",
-            f"    Insertion: method={self.config['length_distribution_params']['insertion']['method']}, range={self.ins_dist_range}",
-            f"    Deletion: method={self.config['length_distribution_params']['deletion']['method']}, range={self.del_dist_range}"
+            f"    Length Distribution: {self.len_dist}",
+            f"    Truncation: {self.truncation}",
+            f"    Length Parameter: method={self.config['length_distribution_params']['method']}, range={self.length_param_prior}",
         ]
         return "\n".join(representation)

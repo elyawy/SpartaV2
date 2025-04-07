@@ -1,4 +1,9 @@
-import logging, argparse, subprocess, sys
+import logging
+import argparse
+import subprocess
+import sys
+import time
+
 from pathlib import Path
 
 from spartaabc.utility import logger, setLogHandler
@@ -14,7 +19,7 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-nc','--numsim-correction', action='store',metavar="Number of correction simulations" , type=int, required=True)
     _parser.add_argument('-noc','--no-correction', action='store_false')
 
-    _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=True)
+    _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=False)
     _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, default="mafft", required=False)
 
     _parser.add_argument('-k','--keep-stats', action='store_true')
@@ -72,11 +77,12 @@ def main(arg_list: list[str] | None = None):
     args = parse_args(arg_list)
 
     MAIN_PATH = Path(args.input).resolve()
-    SEED = args.seed
+    SEED = args.seed if args.seed else time.time_ns()
     SEQUENCE_TYPE = args.type
     NUM_SIMS = args.numsim
     NUM_SIMS_CORRECTION = args.numsim_correction
     CORRECTION = args.no_correction
+    print(SEED)
 
     ALIGNER = args.aligner.upper()
     KEEP_STATS = args.keep_stats
@@ -115,6 +121,9 @@ def main(arg_list: list[str] | None = None):
     abc_cmd = [interpreter, CURRENT_SCRIPT_DIR / "abc_inference.py",
                "-i", str(MAIN_PATH),
                ]
+    if not CORRECTION:
+        abc_cmd.append("-noc")
+
     subprocess.run(abc_cmd)
 
 
