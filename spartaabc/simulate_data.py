@@ -32,7 +32,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
     sim_protocol = sf.SimProtocol(tree=tree_path)
 
     sim_protocol.set_seed(seed)
-    simulator = sf.Simulator(sim_protocol)
+    simulator = sf.Simulator(sim_protocol,simulation_type=sf.SIMULATION_TYPE.NOSUBS)
 
     # simulated_msas = []
     sum_stats = []

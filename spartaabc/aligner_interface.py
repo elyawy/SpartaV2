@@ -15,7 +15,9 @@ class Aligner:
         self._input_file = str(file_path)
         self._output_name = str(file_path).split(".")[0]
         if self._aligner_name == "MAFFT":
-            self._aligner_cmd = ["mafft", "--globalpair", "--maxiterate", "0", self._input_file]
+            self._aligner_cmd = ["mafft", "--globalpair", "--maxiterate", "1000", self._input_file]
+        if self._aligner_name == "MAFFTFAST":
+            self._aligner_cmd = ["mafft", "--retree", "2" , self._input_file]
 
 
     def get_realigned_msa(self) -> str:
