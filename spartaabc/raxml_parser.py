@@ -120,7 +120,7 @@ def parse_raxml_bestModel(model_path: Path):
     
     # First component is always the substitution model
     left_bracket_index = model_components[0].find("{")
-    print(model_components[0][:left_bracket_index])
+
     results['submodel'] = MODEL_MAPPER.get(model_components[0][:left_bracket_index], -1)
     if (results['submodel']) == -1:
         raise RuntimeError("The requested model has not been implemented :(")
@@ -197,6 +197,3 @@ def get_substitution_model(path):
     #     "submodel": "GTR"
     # }
     # return subtitution_model
-
-model = get_substitution_model(Path("/home/elyawy/Data/test"))
-print(model)
