@@ -119,24 +119,40 @@ def parse_raxml_bestModel(model_path: Path):
     model_components = model_part.split('+')
     
     # First component is always the substitution model
-    results['submodel'] = MODEL_MAPPER.get(model_components[0], -1)
+    left_bracket_index = model_components[0].find("{")
+    print(model_components[0][:left_bracket_index])
+    results['submodel'] = MODEL_MAPPER.get(model_components[0][:left_bracket_index], -1)
     if (results['submodel']) == -1:
         raise RuntimeError("The requested model has not been implemented :(")
+    
+    if results['submodel'] == sf.MODEL_CODES.GTR:
+        left_bracket_index = model_components[0].find("{")
+        right_bracket_index = model_components[0].find("}")
+        rates = model_components[0][left_bracket_index+1:right_bracket_index]
+        rates = rates.split("/")
+        rates = [float(x) for x in rates]
+        results["params"] = rates
 
 
     # Parse remaining components
     for component in model_components[1:]:
         # Check for empirical frequencies
-        if component == 'FC':
-            results['empirical_frequencies'] = True
+        left_bracket_index = component.find("{")
+        right_bracket_index = component.find("}")
+
+        if component.startswith('F'):
+            rates = []
+            if left_bracket_index != -1:
+                frequencies = (component[left_bracket_index+1:right_bracket_index])  # Remove 'G' and convert to int
+                frequencies = frequencies.split("/")
+                frequencies = [float(x) for x in frequencies]
+
+                results['params'] = frequencies + results['params']
         
         # Check for gamma categories and alpha
         elif component.startswith('G'):
             # Extract number of categories
             # gamma_info = component.split('m')
-
-            left_bracket_index = component.find("{")
-            right_bracket_index = component.find("}")
 
             results['gamma_cats'] = int(component[1:left_bracket_index])  # Remove 'G' and convert to int
             
@@ -181,3 +197,6 @@ def get_substitution_model(path):
     #     "submodel": "GTR"
     # }
     # return subtitution_model
+
+model = get_substitution_model(Path("/home/elyawy/Data/test"))
+print(model)
