@@ -66,7 +66,8 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
     simulator.set_replacement_model(model=substitution_model["submodel"],
                                     model_parameters=substitution_model.get("params", None),
                                     gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
-                                    gamma_parameters_categories=substitution_model.get("gamma_cats", 1))
+                                    gamma_parameters_categories=substitution_model.get("gamma_cats", 1),
+                                    invariant_sites_proportion=substitution_model.get("invariant_sites", 0.0))
 
     logger.info("Starting msa simulation")
     for idx,params in enumerate(sim_params_correction):

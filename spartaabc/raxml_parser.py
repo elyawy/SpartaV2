@@ -123,7 +123,7 @@ def parse_raxml_bestModel(model_path: Path):
     if (results['submodel']) == -1:
         raise RuntimeError("The requested model has not been implemented :(")
 
-    
+
     # Parse remaining components
     for component in model_components[1:]:
         # Check for empirical frequencies
@@ -133,13 +133,26 @@ def parse_raxml_bestModel(model_path: Path):
         # Check for gamma categories and alpha
         elif component.startswith('G'):
             # Extract number of categories
-            gamma_info = component.split('m')
-            results['gamma_cats'] = int(gamma_info[0][1:])  # Remove 'G' and convert to int
+            # gamma_info = component.split('m')
+
+            left_bracket_index = component.find("{")
+            right_bracket_index = component.find("}")
+
+            results['gamma_cats'] = int(component[1:left_bracket_index])  # Remove 'G' and convert to int
             
             # Extract alpha if present
-            if len(gamma_info) > 1:
-                alpha_str = gamma_info[1].strip('{}')
+            if left_bracket_index != -1:
+                alpha_str = component[left_bracket_index:].strip('{}')
                 results['gamma_shape'] = float(alpha_str)
+
+        elif component.startswith('I'):
+            left_bracket_index = component.find("{")
+            right_bracket_index = component.find("}")
+            if left_bracket_index != -1:
+                alpha_str = component[left_bracket_index:].strip('{}')
+                results['invariant_sites'] = float(alpha_str)
+
+
     
     return results
     
