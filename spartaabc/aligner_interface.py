@@ -22,7 +22,7 @@ class Aligner:
 
     def get_realigned_msa(self) -> str:
         # print(self._aligner_cmd)
-        if self._aligner_name == "MAFFT":
+        if "MAFFT" in self._aligner_name:
             result = subprocess.run(self._aligner_cmd, capture_output=True, text=True)
             realigned_msa, stderr = result.stdout, result.stderr
 

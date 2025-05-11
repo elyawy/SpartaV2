@@ -89,8 +89,9 @@ def create_fake_data_path(data_path: Path) -> Path:
     simulated_msa = sim()
     
     # Run MAFFT realignment
-    sequence_aligner = Aligner("MAFFT")
+    sequence_aligner = Aligner("MAFFTFAST")
     msa_string = simulated_msa.get_msa()
+    (data_path / "original_msa.txt").write_text(msa_string)
 
     sim_fasta_unaligned = msa_string.replace("-","").encode()
     with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
@@ -106,7 +107,7 @@ def create_fake_data_path(data_path: Path) -> Path:
 
 
 random.seed(42)
-for idx,dir in enumerate(list(Path("benchmark/data").iterdir())):
+for idx,dir in enumerate(list(Path("benchmark/data_fast").iterdir())):
     print(idx)
     print(dir.stem)
     create_fake_data_path(dir) # generate simulated data if missing

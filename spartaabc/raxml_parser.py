@@ -120,6 +120,8 @@ def parse_raxml_bestModel(model_path: Path):
     
     # First component is always the substitution model
     left_bracket_index = model_components[0].find("{")
+    if left_bracket_index == -1:
+        left_bracket_index = None
 
     results['submodel'] = MODEL_MAPPER.get(model_components[0][:left_bracket_index], -1)
     if (results['submodel']) == -1:
@@ -153,8 +155,10 @@ def parse_raxml_bestModel(model_path: Path):
         elif component.startswith('G'):
             # Extract number of categories
             # gamma_info = component.split('m')
+            if "m" in component:
+                shift = -1
 
-            results['gamma_cats'] = int(component[1:left_bracket_index])  # Remove 'G' and convert to int
+            results['gamma_cats'] = int(component[1:left_bracket_index+shift])  # Remove 'G' and convert to int
             
             # Extract alpha if present
             if left_bracket_index != -1:

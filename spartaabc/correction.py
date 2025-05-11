@@ -204,8 +204,8 @@ def main(arg_list: list[str] | None = None):
     VERBOSE = args.verbose
 
     setLogHandler(MAIN_PATH)
-    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL {}".format(
-        MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, LENGTH_DISTRIBUTION, INDEL_MODEL
+    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL: {},\n\tALIGNER: {}".format(
+        MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, LENGTH_DISTRIBUTION, INDEL_MODEL, ALIGNER._aligner_name
     ))
 
 

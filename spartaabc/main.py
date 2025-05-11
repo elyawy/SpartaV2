@@ -110,7 +110,7 @@ def main(arg_list: list[str] | None = None):
         correction_cmd_sim = [interpreter, CURRENT_SCRIPT_DIR / "correction.py",
                               "-i", str(MAIN_PATH), "-n", str(NUM_SIMS_CORRECTION),
                               "-s", str(SEED+1), "-l", "zipf", "-m", f"{model}",
-                              "-t", SEQUENCE_TYPE]
+                              "-t", SEQUENCE_TYPE, "-a", ALIGNER]
         SEED += 2
 
         processes.append(subprocess.Popen(simulate_cmd))
@@ -119,7 +119,7 @@ def main(arg_list: list[str] | None = None):
     exit_codes = [p.wait() for p in processes]
     
     abc_cmd = [interpreter, CURRENT_SCRIPT_DIR / "abc_inference.py",
-               "-i", str(MAIN_PATH),
+               "-i", str(MAIN_PATH),"-a", ALIGNER
                ]
     if not CORRECTION:
         abc_cmd.append("-noc")
