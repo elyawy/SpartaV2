@@ -35,7 +35,7 @@ def scale_tree(tree_path: str, scale_factor: float, overwrite: bool=False):
         f.write(scaled_newick)
     print(f"Scaled tree written to: {scaled_tree_path}")
 
-def create_fake_data_path(data_path: Path) -> Path:
+def create_fake_data_path(data_path: Path, indel_model: str) -> Path:
     """
     Prepares folder for ABC pipeline:
     1. Simulates MSA based on tree
@@ -51,9 +51,11 @@ def create_fake_data_path(data_path: Path) -> Path:
     # scale_tree(tree_path, scale_factor=2.0, overwrite=True)
 
     seed = random.randint(1,1e6)
-    selected_model = "sim" if random.random() < 0.5 else "rim"
+    selected_model = indel_model
 
-    prior_sampler = PriorSampler(indel_model=selected_model, seed=seed)
+    prior_sampler = PriorSampler(indel_model=selected_model,
+                                 seq_lengths=[100,1000],
+                                 seed=seed)
     sampled_params = prior_sampler.sample()
 
     root_length = sampled_params[0][0]
@@ -107,7 +109,8 @@ def create_fake_data_path(data_path: Path) -> Path:
 
 
 random.seed(42)
-for idx,dir in enumerate(list(Path("benchmark/data_fast").iterdir())):
-    print(idx)
-    print(dir.stem)
-    create_fake_data_path(dir) # generate simulated data if missing
+for indel_model_ in ["sim", "rim"]:
+    for idx,dir in enumerate(list(Path(f"benchmark/data_fast_{indel_model_}").iterdir())):
+        print(idx)
+        print(dir.stem)
+        create_fake_data_path(dir, indel_model_) # generate simulated data if missing
