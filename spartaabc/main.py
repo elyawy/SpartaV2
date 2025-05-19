@@ -3,10 +3,14 @@ import argparse
 import subprocess
 import sys
 import time
+import pkg_resources
 
 from pathlib import Path
 
 from spartaabc.utility import logger, setLogHandler
+
+default_config_path = pkg_resources.resource_filename("spartaabc", "default_prior.json")
+
 
 interpreter=sys.executable
 
@@ -20,6 +24,8 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-noc','--no-correction', action='store_false')
 
     _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=False)
+    _parser.add_argument('-p','--prior', action='store',metavar="Prior config path" , type=str, required=False)
+
     _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, default="mafft", required=False)
 
     _parser.add_argument('-k','--keep-stats', action='store_true')
@@ -82,6 +88,7 @@ def main(arg_list: list[str] | None = None):
     NUM_SIMS = args.numsim
     NUM_SIMS_CORRECTION = args.numsim_correction
     CORRECTION = args.no_correction
+    PRIOR_PATH = Path(args.prior).resolve()
     print(SEED)
 
     ALIGNER = args.aligner.upper()
@@ -90,8 +97,8 @@ def main(arg_list: list[str] | None = None):
 
 
     setLogHandler(MAIN_PATH, "w")
-    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, NUM_SIMS_CORRECTION: {}, SEQUENCE_TYPE: {}".format(
-        MAIN_PATH, SEED, NUM_SIMS, NUM_SIMS_CORRECTION, SEQUENCE_TYPE
+    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, NUM_SIMS_CORRECTION: {}, SEQUENCE_TYPE: {}, PRIOR: {}".format(
+        MAIN_PATH, SEED, NUM_SIMS, NUM_SIMS_CORRECTION, SEQUENCE_TYPE, PRIOR_PATH
     ))
 
     INDEL_MODELS = ["sim", "rim"]

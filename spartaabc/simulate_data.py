@@ -1,5 +1,9 @@
-import argparse, logging
+import argparse
+import logging
+import time
 from pathlib import Path
+import pkg_resources
+
 import numpy as np
 import pandas as pd
 
@@ -12,14 +16,18 @@ from spartaabc.utility import PriorSampler, prepare_prior_sampler
 from spartaabc.utility import get_msa_path, get_tree_path
 from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
 
+default_config_path = pkg_resources.resource_filename("spartaabc", "default_prior.json")
+
 
 def parse_args(arg_list: list[str] | None):
     _parser = argparse.ArgumentParser(allow_abbrev=False)
     _parser.add_argument('-i','--input', action='store',metavar="Input folder", type=str, required=True)
     _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
-    _parser.add_argument('-s','--seed', action='store',metavar="Simulation config" , type=int, required=True)
+    _parser.add_argument('-s','--seed', action='store',metavar="Simulation config" , type=int, required=False)
     _parser.add_argument('-l','--lengthdist', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
+    _parser.add_argument('-p','--prior', action='store',metavar="Prior config path" , type=str, required=False)
+
     _parser.add_argument('-v','--verbose', action='store_true')
 
 
@@ -85,7 +93,8 @@ def main(arg_list: list[str] | None = None):
     args = parse_args(arg_list)
 
     MAIN_PATH = Path(args.input).resolve()
-    SEED = args.seed
+    SEED = args.seed if args.seed else time.time_ns()
+
     NUM_SIMS = args.numsim
     LENGTH_DISTRIBUTION = args.lengthdist
     INDEL_MODEL = args.model

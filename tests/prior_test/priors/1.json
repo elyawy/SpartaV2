@@ -1,0 +1,18 @@
+{
+    "indel_rates": {
+        "sum_rates": {
+            "method": "uniform",
+            "range": [0.02,0.03]
+        },
+        "ratio_rates": {
+            "method": "log_uniform",
+            "range": [-0.3,0.3]
+        }
+    },
+    "length_distribution_params": {
+            "distribution": "zipf",
+            "method": "uniform",
+            "range": [1.01,3.0],
+            "truncation": 50
+    }
+}
