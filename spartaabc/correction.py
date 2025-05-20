@@ -20,6 +20,7 @@ from spartaabc.aligner_interface import Aligner
 from spartaabc.raxml_parser import get_substitution_model
 from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler
 from spartaabc.utility import StandardMemoryScaler, logger
+from spartaabc.utility import default_prior_config_path
 
 warnings.simplefilter("ignore", category=exceptions.ConvergenceWarning)
 
@@ -31,8 +32,8 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-n','--numsim', action='store',metavar="Number of simulations" , type=int, required=True)
     _parser.add_argument('-s','--seed', action='store',metavar="Simulator seed" , type=int, required=True)
     _parser.add_argument('-a','--aligner', action='store',metavar="Alignment program to use" , type=str, default="mafft", required=False)
+    _parser.add_argument('-p','--prior', action='store',metavar="Prior config path" , type=str, required=False, default=default_prior_config_path)
 
-    _parser.add_argument('-l','--lengthdist', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-k','--keep-stats', action='store_true')
     _parser.add_argument('-v','--verbose', action='store_true')
@@ -139,56 +140,6 @@ def compute_regressors(true_stats: list[list[float]], corrected_stats: list[list
     return regressors, performance_metrics
 
 
-def compute_alignment_correction(MAIN_PATH: Path, SEED: int, SEQUENCE_TYPE: str,
-                                 NUM_SIMS: int, ALIGNER: str, LENGTH_DISTRIBUTION: str,
-                                 INDEL_MODEL: str, KEEP_STATS: bool):
-    logging.basicConfig()
-
-    ALIGNER = Aligner(ALIGNER.upper())
-
-    setLogHandler(MAIN_PATH)
-    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL {}".format(
-        MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, LENGTH_DISTRIBUTION, INDEL_MODEL
-    ))
-
-
-    TREE_PATH = get_tree_path(MAIN_PATH)
-    MSA_PATH = get_msa_path(MAIN_PATH)
-
-    prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL, SEED)
-    substitution_model = prepare_substitution_model(MAIN_PATH, SEQUENCE_TYPE)
-    msas, sum_stats = simulate_data(prior_sampler=prior_sampler, num_sims=NUM_SIMS,
-                                    tree_path=TREE_PATH, substitution_model=substitution_model,
-                                    seed=SEED)
-    realigned_sum_stats = compute_realigned_stats(msas, sum_stats, ALIGNER, TREE_PATH)
-    regressors, regressors_performence = compute_regressors(true_stats=sum_stats, corrected_stats=realigned_sum_stats)
-
-    full_correction_path = MAIN_PATH / f"{ALIGNER.get_name()}_correction"
-    try:
-        os.mkdir(full_correction_path)
-    except:
-        print("correction folder exists already")
-    
-    with open(full_correction_path / f'regressors_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.pickle', 'wb') as f:
-        pickle.dump(regressors, f)
-    pd.DataFrame(regressors_performence).to_csv(
-        full_correction_path / f'regression_performance_{LENGTH_DISTRIBUTION}_{INDEL_MODEL}.csv')
-
-    if KEEP_STATS:
-        print("saving stats...")
-        true_stats = pd.DataFrame(sum_stats)
-        true_stats.columns = map(str, range(len(true_stats.columns)))
-        true_stats.to_parquet(full_correction_path / "true_stats.parquet.gzip", compression='gzip', index=False)
-
-        realigned_stats = pd.DataFrame(realigned_sum_stats)
-        realigned_stats.columns = map(str, realigned_stats.columns)
-        realigned_stats.to_parquet(full_correction_path / "realigned_stats.parquet.gzip", compression='gzip', index=False)
-
-        infered_stats = np.array([regressor.predict(true_stats.values).T for regressor in regressors])
-        infered_stats = pd.DataFrame(infered_stats.T, columns=map(str, range(27)))
-        infered_stats.to_parquet(full_correction_path / "infered_stats.parquet.gzip", compression='gzip', index=False)
-
-
 def main(arg_list: list[str] | None = None):
     logging.basicConfig()
     args = parse_args(arg_list)
@@ -198,21 +149,25 @@ def main(arg_list: list[str] | None = None):
     SEQUENCE_TYPE = args.type
     NUM_SIMS = args.numsim
     ALIGNER = Aligner(args.aligner.upper())
-    LENGTH_DISTRIBUTION = args.lengthdist
     INDEL_MODEL = args.model
     KEEP_STATS = args.keep_stats
+    PRIOR_PATH = Path(args.prior).resolve()
+
     VERBOSE = args.verbose
 
     setLogHandler(MAIN_PATH)
-    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tLENGTH_DISTRIBUTION: {}, INDEL_MODEL: {},\n\tALIGNER: {}".format(
-        MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, LENGTH_DISTRIBUTION, INDEL_MODEL, ALIGNER._aligner_name
+    logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tINDEL_MODEL: {},\n\tALIGNER: {}".format(
+        MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, INDEL_MODEL, ALIGNER._aligner_name
     ))
 
 
     TREE_PATH = get_tree_path(MAIN_PATH)
     MSA_PATH = get_msa_path(MAIN_PATH)
 
-    prior_sampler = prepare_prior_sampler(MSA_PATH, LENGTH_DISTRIBUTION, INDEL_MODEL, SEED)
+    prior_sampler = prepare_prior_sampler(MSA_PATH, INDEL_MODEL, SEED, PRIOR_PATH)
+    logger.info("\nLoaded prior configuration from file {} is:\n\t{}".format(PRIOR_PATH, prior_sampler))
+    LENGTH_DISTRIBUTION = prior_sampler.len_dist
+
     substitution_model = prepare_substitution_model(MAIN_PATH, SEQUENCE_TYPE)
     msas, sum_stats = simulate_data(prior_sampler=prior_sampler, num_sims=NUM_SIMS,
                                     tree_path=TREE_PATH, substitution_model=substitution_model,

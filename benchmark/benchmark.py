@@ -9,7 +9,6 @@ from spartaabc.utility import get_tree_path
 from spartaabc.prior_sampler import PriorSampler
 from spartaabc.aligner_interface import Aligner
 from spartaabc.abc_inference import IndelParams
-from spartaabc.spabc import parallelized_inference
 from spartaabc.raxml_parser import get_substitution_model
 
 def scale_tree(tree_path: str, scale_factor: float, overwrite: bool=False):

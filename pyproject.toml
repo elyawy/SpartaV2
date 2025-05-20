@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spartaabc"
-version = "0.5.3"
+version = "0.5.5"
 readme = "README.md"
 description = "Indel model parameter inference."
 license = {text = "AFL-3.0"}
@@ -21,6 +21,9 @@ dependencies = [
 include = ["spartaabc*"]  # ["*"] by default
 exclude = ["test*"]  # empty by default
 namespaces = false  # true by default
+
+[tool.setuptools.package-data]
+"spartaabc" = ["default_prior.json"]
 
 [project.scripts]
 sparta = "spartaabc.main:main"
