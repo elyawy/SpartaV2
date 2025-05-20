@@ -141,10 +141,17 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
 
     top_stats[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params.csv", index=False)
 
+    full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
+    top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
+    top_sim_data[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params_sim.csv", index=False)
+
+    full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
+    top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
+    top_rim_data[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params_rim.csv", index=False)
+
+
     abc_indel_params = None
     if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > (top_cutoff // 2):
-        full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
-        top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
         root_length = int(top_sim_data["root_length"].mean())
         R_ID = float(top_sim_data["insertion_rate"].mean())
         A_ID = float(top_sim_data["length_param_insertion"].mean())
@@ -154,8 +161,6 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
                                        length_distribution="zipf",
                                        indel_model="SIM")
     else:
-        full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
-        top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
         root_length = int(top_rim_data["root_length"].mean())
         R_I = float(top_rim_data["insertion_rate"].mean())
         R_D = float(top_rim_data["deletion_rate"].mean())
@@ -167,7 +172,7 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
                                        length_distribution="zipf",
                                        indel_model="RIM")
     (main_path / "model_params.txt").write_text(str(abc_indel_params))
-
+    return abc_indel_params
 
 def main(arg_list: list[str] | None = None):
     logging.basicConfig()
