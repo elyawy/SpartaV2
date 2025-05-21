@@ -74,12 +74,14 @@ def load_correction_regressor_scores(main_path: Path, aligner: str):
 
     return scores["pearsonr"].to_list()
 
-def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float], stat_indices: list[int], r_threshold=0.8):
+def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float], kept_statistics: list[int], r_threshold=0.8):
     data = data.to_numpy()
 
     kept_stats = []
     infered_data = []
     for idx, regressor in enumerate(regressors):
+        if idx not in kept_statistics:
+            continue
         if regressor_scores[idx] > r_threshold:
             kept_stats.append(idx)
             infered_data.append(regressor.predict(data).T)
@@ -87,74 +89,77 @@ def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float
     temp_data = np.array(infered_data)
     temp_data = pd.DataFrame(temp_data.T, columns=[SUMSTATS_LIST[i] for i in kept_stats])
 
-    temp_data = temp_data.iloc[:, [kept_stats.index(i) for i in stat_indices if i in kept_stats]]
+    inferred_realigned_stats = temp_data.iloc[:, [kept_stats.index(i) for i in kept_statistics if i in kept_stats]]
 
-    return temp_data, stat_indices
+    return inferred_realigned_stats, kept_stats
+
+def correct_and_merge_models_data(main_path: Path, aligner: str, kept_statistics, parameters_and_stats) -> tuple[pd.DataFrame, list[int]]:
+    regressors = load_correction_regressors(main_path, aligner)
+    regressor_scores = load_correction_regressor_scores(main_path, aligner)
+    
+    stats_data = []
+    for model in  parameters_and_stats.keys():
+        current_regressors = regressors.get(model, None)
+
+        realigned_statistics, kept_statistics = bias_correction(current_regressors,
+                                                                parameters_and_stats[model],
+                                                                regressor_scores, kept_statistics)
+        stats_data.append(realigned_statistics)
+
+    return pd.concat(stats_data), kept_statistics
+
+
+
 
 def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=True, top_cutoff: int=100, exclude_stats: list[str] = []) -> IndelParams:
-
-
-    MSA_PATH = get_msa_path(main_path)
-
-    empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
-
-    stats_data = load_data(main_path)
-    if correction:
-        regressors = load_correction_regressors(main_path, aligner)
-        regressor_scores = load_correction_regressor_scores(main_path, aligner)
-    else:
-        regressors = {}
 
     invalid = [stat for stat in exclude_stats if stat not in SUMSTATS_LIST]
     if invalid:
         raise ValueError(f"Invalid summary stats to exclude: {invalid}")
-    
-    stat_indices = [i for i, stat in enumerate(SUMSTATS_LIST) if stat not in exclude_stats]
-    
-    params_data = []
-    full_stats_data = []
-    kept_statistics = range(len(SUMSTATS_LIST))
-    for model in  stats_data.keys():
-        current_regressors = regressors.get(model, None)
-        params_data.append(stats_data[model][PARAMS_LIST])
 
-        if current_regressors is not None:
-            temp_df, kept_statistics = bias_correction(current_regressors, stats_data[model], regressor_scores, stat_indices)
-            stat_indices.append(temp_df)
+    MSA_PATH = get_msa_path(main_path)
 
-    empirical_stats = [empirical_stats[i] for i in stat_indices]
-    len_emp=len(empirical_stats)
-    len_stat=len(stat_indices)
-    params_data = pd.concat(params_data)
+    kept_statistics_indices = [i for i, stat in enumerate(SUMSTATS_LIST) if stat not in exclude_stats]
+    SUMSTATS_LIST_SUBSET = [f"SS_{i}" for i in kept_statistics_indices]
+
+    empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
+
+    parameters_and_stats = load_data(main_path)
+    params_df = pd.concat([parameters_and_stats[model][PARAMS_LIST] for model in  parameters_and_stats.keys()])
+
+
     if correction:
-        full_stats_data = pd.concat(full_stats_data)
+        stats_df, kept_statistics_indices = correct_and_merge_models_data(main_path, aligner,
+                                                                          kept_statistics_indices,
+                                                                          parameters_and_stats)
+        stats_df.drop(columns=exclude_stats, inplace=True, errors="ignore")
     else:
-        #stat_indices = [val[SUMSTATS_LIST] for key, val in stats_data.items()]
-        stat_indices = [val[[col for col in SUMSTATS_LIST if col not in exclude_stats]] for key, val in stats_data.items()]
-        len_stat1= len(stat_indices)
-        stat_indices = pd.concat(stat_indices)
+        stats_df = pd.concat([parameters_and_stats[model][SUMSTATS_LIST_SUBSET] for model in  parameters_and_stats.keys()])
+
+    empirical_stats = [empirical_stats[i] for i in kept_statistics_indices]
+
     calculated_distances = None
     if distance_metric == "mahal":
-        cov = np.cov(stat_indices.T)
+        cov = np.cov(stats_df.T)
         cov = cov + np.eye(len(cov))*1e-4
         inv_covmat = np.linalg.inv(cov)
-        u_minus_v = empirical_stats-stat_indices
+        u_minus_v = empirical_stats-stats_df
         left = np.dot(u_minus_v, inv_covmat)
         calculated_distances = np.sqrt(np.sum(u_minus_v*left, axis=1))
     if distance_metric == "euclid":
-        weights = 1/(full_stats_data.std(axis=0) + 0.001)
-        calculated_distances = np.sum(weights*(full_stats_data - empirical_stats)**2, axis=1)
+        weights = 1/(stats_df.std(axis=0) + 0.001)
+        calculated_distances = np.sum(weights*(stats_df - empirical_stats)**2, axis=1)
     
-    stat_indices["distances"] = calculated_distances
-    stat_indices[PARAMS_LIST] = params_data
+    stats_df["distances"] = calculated_distances
+    stats_df[PARAMS_LIST] = params_df
 
-    top_stats = stat_indices.nsmallest(top_cutoff, "distances")
+    top_stats = stats_df.nsmallest(top_cutoff, "distances")
 
     top_stats[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params.csv", index=False)
 
     abc_indel_params = None
     if len(top_stats[top_stats["insertion_rate"] == top_stats["deletion_rate"]]) > (top_cutoff // 2):
-        full_sim_data = stat_indices[stat_indices["insertion_rate"] == full_stats_data["deletion_rate"]]
+        full_sim_data = stats_df[stats_df["insertion_rate"] == stats_df["deletion_rate"]]
         top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
         root_length = int(top_sim_data["root_length"].mean())
         R_ID = float(top_sim_data["insertion_rate"].mean())
@@ -165,7 +170,7 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
                                        length_distribution="zipf",
                                        indel_model="SIM")
     else:
-        full_rim_data = stat_indices[stat_indices["insertion_rate"] != stat_indices["deletion_rate"]]
+        full_rim_data = stats_df[stats_df["insertion_rate"] != stats_df["deletion_rate"]]
         top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
         root_length = int(top_rim_data["root_length"].mean())
         R_I = float(top_rim_data["insertion_rate"].mean())
@@ -178,7 +183,7 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
                                        length_distribution="zipf",
                                        indel_model="RIM")
     (main_path / "model_params.txt").write_text(str(abc_indel_params))
-
+    return abc_indel_params
 
 def main(arg_list: list[str] | None = None):
     logging.basicConfig()
