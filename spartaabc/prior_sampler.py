@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import json
+from pathlib import Path
 from typing import Dict
 
 from msasim import sailfish as sf
@@ -65,7 +66,7 @@ class SamplingMethod:
 
 
 class PriorSampler:
-    def __init__(self, conf_file=None,
+    def __init__(self, conf_file: Path=None,
                  len_dist="zipf",
                  rate_priors=[[0.0, 0.05], [-1, 1]],
                  length_distribution_priors=[1.001,2.0],
@@ -75,15 +76,11 @@ class PriorSampler:
                  seed=1):
         self.seed = seed
         random.seed(seed)
-        self.indel_model = indel_model
-        self.truncation = truncation
 
         # Set length distribution and indel model directly, not from config
         self.length_distribution = sf.CustomDistribution
-        self.len_dist = len_dist
         self.indel_model = indel_model
-        self.seq_lengths = seq_lengths
-        # Default configuration - exclude length_distribution and indel_model
+        # Default configuration - exclude indel_model (sim/rim)
         self.config = {
             "sequence_length": {
                 "method": "integer_uniform",
@@ -115,11 +112,11 @@ class PriorSampler:
         # Initialize based on configuration
         self._initialize_from_config()
 
-    def _load_config(self, conf_file: str) -> None:
+    def _load_config(self, conf_file: Path) -> None:
         """Load configuration from JSON file"""
         try:
             with open(conf_file, 'r') as f:
-                if conf_file.endswith('.json'):
+                if conf_file.suffix == '.json':
                     loaded_config = json.load(f)
                 else:
                     raise ValueError("Config file must be JSON (.json)")
@@ -147,9 +144,10 @@ class PriorSampler:
         # Set sequence length prior - using constructor-provided seq_lengths
         # Do not override with config values
         scale = self.config["sequence_length"]["scale_factor"]
+        sequence_length_range = self.config["sequence_length"]["range"]
         self.sequence_length_prior = [
-            int(self.seq_lengths[0] * scale[0]), 
-            int(self.seq_lengths[1] * scale[1])
+            int(sequence_length_range[0] * scale[0]), 
+            int(sequence_length_range[1] * scale[1])
         ]
         
         # Get samplers
@@ -204,25 +202,21 @@ class PriorSampler:
             ratio_of_rates = self.ratio_rates_sampler(*self.ratio_rates_range)
             
             if self.indel_model == "sim":
-                # In the "sim" case, we set both insertion and deletion rates equal to sum_of_rates
-                # This means the total mutation rate is actually 2*sum_of_rates
-                # This maintains consistency with the original code's behavior
-                yield (sum_of_rates, sum_of_rates)
-            else:
-                # The ratio_of_rates is insertion_rate / deletion_rate
-                # So to get the individual rates from the sum:
-                # insertion_rate = (ratio_of_rates * deletion_rate)
-                # insertion_rate + deletion_rate = sum_of_rates
-                # Substituting: 
-                # (ratio_of_rates * deletion_rate) + deletion_rate = sum_of_rates
-                # deletion_rate * (ratio_of_rates + 1) = sum_of_rates
-                deletion_rate = sum_of_rates / (ratio_of_rates + 1)
-                insertion_rate = ratio_of_rates * deletion_rate
-                
-                # Verify the sum constraint is maintained
-                assert abs((insertion_rate + deletion_rate) - sum_of_rates) < 1e-10, "Sum constraint violated"
-                
-                yield (insertion_rate, deletion_rate)
+                ratio_of_rates = 1.0
+            # The ratio_of_rates is insertion_rate / deletion_rate
+            # So to get the individual rates from the sum:
+            # insertion_rate = (ratio_of_rates * deletion_rate)
+            # insertion_rate + deletion_rate = sum_of_rates
+            # Substituting: 
+            # (ratio_of_rates * deletion_rate) + deletion_rate = sum_of_rates
+            # deletion_rate * (ratio_of_rates + 1) = sum_of_rates
+            deletion_rate = sum_of_rates / (ratio_of_rates + 1)
+            insertion_rate = ratio_of_rates * deletion_rate
+            
+            # Verify the sum constraint is maintained
+            assert abs((insertion_rate + deletion_rate) - sum_of_rates) < 1e-10, "Sum constraint violated"
+            
+            yield (insertion_rate, deletion_rate)
 
     def sample(self, n=1):
         root_length = self.sample_root_length()

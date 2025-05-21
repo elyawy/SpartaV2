@@ -9,7 +9,6 @@ from spartaabc.utility import get_tree_path
 from spartaabc.prior_sampler import PriorSampler
 from spartaabc.aligner_interface import Aligner
 from spartaabc.abc_inference import IndelParams
-from spartaabc.spabc import parallelized_inference
 from spartaabc.raxml_parser import get_substitution_model
 
 def scale_tree(tree_path: str, scale_factor: float, overwrite: bool=False):
@@ -54,6 +53,7 @@ def create_fake_data_path(data_path: Path, indel_model: str) -> Path:
     selected_model = indel_model
 
     prior_sampler = PriorSampler(indel_model=selected_model,
+                                 rate_priors=[[0.0,0.1],[-1.0,1.0]],
                                  seq_lengths=[100,1000],
                                  seed=seed)
     sampled_params = prior_sampler.sample()
