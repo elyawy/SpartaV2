@@ -157,11 +157,11 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
 
     top_stats[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params.csv", index=False)
 
-    full_sim_data = full_stats_data[full_stats_data["insertion_rate"] == full_stats_data["deletion_rate"]]
+    full_sim_data = stats_df[stats_df["insertion_rate"] == stats_df["deletion_rate"]]
     top_sim_data = full_sim_data.nsmallest(top_cutoff, "distances")
     top_sim_data[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params_sim.csv", index=False)
 
-    full_rim_data = full_stats_data[full_stats_data["insertion_rate"] != full_stats_data["deletion_rate"]]
+    full_rim_data = stats_df[stats_df["insertion_rate"] != stats_df["deletion_rate"]]
     top_rim_data = full_rim_data.nsmallest(top_cutoff, "distances")
     top_rim_data[["distances"] + PARAMS_LIST].to_csv(main_path / "top_params_rim.csv", index=False)
 
