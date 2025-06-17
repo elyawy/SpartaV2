@@ -2,7 +2,6 @@ import argparse
 import logging
 import time
 from pathlib import Path
-import pkg_resources
 
 import numpy as np
 import pandas as pd
@@ -16,9 +15,8 @@ from spartaabc.utility import PriorSampler, prepare_prior_sampler
 from spartaabc.utility import get_msa_path, get_tree_path
 from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
 from spartaabc.utility import default_prior_config_path
+from spartaabc.utility import validate_input_directory
 
-
-default_config_path = pkg_resources.resource_filename("spartaabc", "default_prior.json")
 
 
 def parse_args(arg_list: list[str] | None):
@@ -29,7 +27,7 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-p','--prior', action='store',metavar="Prior config path" , type=str, required=False, default=default_prior_config_path)
 
-    _parser.add_argument('-v','--verbose', action='store_true')
+    # _parser.add_argument('-v','--verbose', action='store_true')
 
 
     args = _parser.parse_args(arg_list)
@@ -50,7 +48,20 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
     length_distribution_sampler = prior_sampler.sample_length_distributions()
 
     logger.info("Starting msa simulation")
-    for _ in range(num_sims):
+
+    # Progress tracking variables
+    log_interval = max(1, num_sims // 20)  # Log 20 times total
+    next_log = log_interval
+
+    for i in range(num_sims):
+
+        # Log progress
+        if i >= next_log or i == num_sims - 1:
+            percentage = ((i) / num_sims) * 100
+            logger.info(f"Simulation progress ({prior_sampler.indel_model}): "
+                       f"{i}/{num_sims} ({percentage:.1f}%)")
+            next_log += log_interval
+
         root_length = next(root_sampler)
         insertion_rate, deletion_rate = next(indel_rate_sampler)
         lendist, insertion_length_dist, deletion_length_dist = next(length_distribution_sampler)
@@ -72,13 +83,15 @@ def main(arg_list: list[str] | None = None):
     args = parse_args(arg_list)
 
     MAIN_PATH = Path(args.input).resolve()
+    validate_input_directory(MAIN_PATH)
+
     SEED = args.seed if args.seed else time.time_ns()
 
     NUM_SIMS = args.numsim
     INDEL_MODEL = args.model
     PRIOR_PATH = Path(args.prior).resolve()
 
-    VERBOSE = args.verbose
+    # VERBOSE = args.verbose
     
     setLogHandler(MAIN_PATH)
     logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {},\n\tINDEL_MODEL {}".format(

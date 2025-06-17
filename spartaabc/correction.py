@@ -5,6 +5,7 @@ import argparse
 import warnings
 import copy
 import logging
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -21,6 +22,8 @@ from spartaabc.raxml_parser import get_substitution_model
 from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler
 from spartaabc.utility import StandardMemoryScaler, logger
 from spartaabc.utility import default_prior_config_path
+from spartaabc.utility import validate_input_directory
+from spartaabc.utility import check_dependencies
 
 warnings.simplefilter("ignore", category=exceptions.ConvergenceWarning)
 
@@ -36,7 +39,7 @@ def parse_args(arg_list: list[str] | None):
 
     _parser.add_argument('-m','--model', action='store',metavar="Simulation config" , type=str, required=True)
     _parser.add_argument('-k','--keep-stats', action='store_true')
-    _parser.add_argument('-v','--verbose', action='store_true')
+    # _parser.add_argument('-v','--verbose', action='store_true')
 
 
     args = _parser.parse_args()
@@ -54,7 +57,6 @@ def prepare_substitution_model(main_path: Path, sequence_type: str):
 
 
 def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, substitution_model: dict, seed: int):
-    print(seed)
     sim_protocol = sf.SimProtocol(tree_path, seed=seed)
     simulator = sf.Simulator(sim_protocol,
                              simulation_type=sf.SIMULATION_TYPE[substitution_model["mode"]])
@@ -91,11 +93,22 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
 
 
 def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
-                            sequence_aligner: Aligner, tree_path: str):
+                            sequence_aligner: Aligner, tree_path: str, indel_model):
     logger.info("Realigning MSAs and recomputing stats")
     realigned_sum_stats = []
 
-    for msa in msas:
+    # Progress tracking variables
+    total_msas = len(msas)
+    log_interval = max(1, total_msas // 10)  # Log 10 times
+    next_log = log_interval
+
+    for i, msa in enumerate(msas):
+        # Log progress
+        if i >= next_log or i == total_msas - 1:
+            percentage = ((i) / total_msas) * 100
+            logger.info(f"Realignment progress ({indel_model}): {i}/{total_msas} ({percentage:.1f}%)")
+            next_log += log_interval
+
         sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
         with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
             tempf.write(sim_fasta_unaligned)
@@ -141,10 +154,14 @@ def compute_regressors(true_stats: list[list[float]], corrected_stats: list[list
 
 
 def main(arg_list: list[str] | None = None):
+    check_dependencies()
+
     logging.basicConfig()
     args = parse_args(arg_list)
 
     MAIN_PATH = Path(args.input).resolve()
+    validation_status = validate_input_directory(MAIN_PATH)
+
     SEED = args.seed
     SEQUENCE_TYPE = args.type
     NUM_SIMS = args.numsim
@@ -153,13 +170,16 @@ def main(arg_list: list[str] | None = None):
     KEEP_STATS = args.keep_stats
     PRIOR_PATH = Path(args.prior).resolve()
 
-    VERBOSE = args.verbose
+    # VERBOSE = args.verbose
 
     setLogHandler(MAIN_PATH)
     logger.info("\n\tMAIN_PATH: {},\n\tSEED: {}, NUM_SIMS: {}, SEQUENCE_TYPE: {},\n\tINDEL_MODEL: {},\n\tALIGNER: {}".format(
         MAIN_PATH, SEED, NUM_SIMS, SEQUENCE_TYPE, INDEL_MODEL, ALIGNER._aligner_name
     ))
-
+    if not validation_status["correction_recommended"]:
+        logger.info("Substitution model file not provided ('.bestModel')")
+        logger.info("Halting correction.")
+        sys.exit(1)
 
     TREE_PATH = get_tree_path(MAIN_PATH)
     MSA_PATH = get_msa_path(MAIN_PATH)
@@ -169,10 +189,12 @@ def main(arg_list: list[str] | None = None):
     LENGTH_DISTRIBUTION = prior_sampler.len_dist
 
     substitution_model = prepare_substitution_model(MAIN_PATH, SEQUENCE_TYPE)
+    logger.info("Loaded substitution model:\n" + "\n".join(map(str, substitution_model.items())))
+    
     msas, sum_stats = simulate_data(prior_sampler=prior_sampler, num_sims=NUM_SIMS,
                                     tree_path=TREE_PATH, substitution_model=substitution_model,
                                     seed=SEED)
-    realigned_sum_stats = compute_realigned_stats(msas, sum_stats, ALIGNER, TREE_PATH)
+    realigned_sum_stats = compute_realigned_stats(msas, sum_stats, ALIGNER, TREE_PATH, prior_sampler.indel_model)
     regressors, regressors_performence = compute_regressors(true_stats=sum_stats, corrected_stats=realigned_sum_stats)
 
     full_correction_path = MAIN_PATH / f"{args.aligner}_correction"

@@ -155,6 +155,7 @@ def parse_raxml_bestModel(model_path: Path):
         elif component.startswith('G'):
             # Extract number of categories
             # gamma_info = component.split('m')
+            shift = 0
             if "m" in component:
                 shift = -1
 
