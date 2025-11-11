@@ -102,11 +102,9 @@ def main(arg_list: list[str] | None = None):
     TREE_PATH = get_tree_path(MAIN_PATH)
     MSA_PATH = get_msa_path(MAIN_PATH)
 
-    print("HEY", MSA_PATH, PRIOR_PATH)
     prior_sampler = prepare_prior_sampler(MSA_PATH, INDEL_MODEL, SEED, PRIOR_PATH)
     logger.info("\nLoaded prior configuration from file {} is:\n\t{}".format(PRIOR_PATH, prior_sampler))
     LENGTH_DISTRIBUTION = prior_sampler.len_dist
-    print("LENGTH_DISTRIBUTION", LENGTH_DISTRIBUTION)
     msa_stats = simulate_data(prior_sampler, num_sims=NUM_SIMS, tree_path=TREE_PATH, seed=SEED)
 
     data_full = msa_stats
