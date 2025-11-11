@@ -60,7 +60,7 @@ def validate_input_directory(main_path: Path) -> dict:
 
 def check_dependencies():
     """Check if all required external tools are available"""
-    required_tools = ["mafft"]
+    required_tools = ["mafftpy"]
     
     print("🔍 Checking dependencies...")
     

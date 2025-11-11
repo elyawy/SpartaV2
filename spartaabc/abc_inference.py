@@ -7,6 +7,7 @@ import pandas as pd
 from dataclasses import dataclass
 
 import msastats
+from spartaabc.aligner_interface import Aligner
 from spartaabc.utility import get_msa_path
 from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
 from spartaabc.utility import logger, setLogHandler
@@ -122,19 +123,26 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
     kept_statistics_indices = [i for i, stat in enumerate(SUMSTATS_LIST) if stat not in exclude_stats]
     SUMSTATS_LIST_SUBSET = [f"SS_{i}" for i in kept_statistics_indices]
 
-    empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
 
     parameters_and_stats = load_data(main_path)
     params_df = pd.concat([parameters_and_stats[model][PARAMS_LIST] for model in  parameters_and_stats.keys()])
 
 
     if correction:
+        logger.info(f"Correction enabled - realigning input MSA with {aligner}")
+        sequence_aligner = Aligner(aligner)
+        sequence_aligner.set_input_file(MSA_PATH)
+        realigned_msa_text = sequence_aligner.get_realigned_msa()
+        realigned_sequences = [s[s.index("\n"):].replace("\n","") for s in realigned_msa_text.split(">")[1:]]
+        empirical_stats = msastats.calculate_msa_stats(realigned_sequences)
+        
         stats_df, kept_statistics_indices = correct_and_merge_models_data(main_path, aligner,
                                                                           kept_statistics_indices,
                                                                           parameters_and_stats)
         stats_df.drop(columns=exclude_stats, inplace=True, errors="ignore")
     else:
         stats_df = pd.concat([parameters_and_stats[model][SUMSTATS_LIST_SUBSET] for model in  parameters_and_stats.keys()])
+        empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
 
     empirical_stats = [empirical_stats[i] for i in kept_statistics_indices]
 

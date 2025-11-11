@@ -1,0 +1,30 @@
+2025-11-11 12:40:01,742[INFO][main.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762857601742879694, NUM_SIMS: 100000, NUM_SIMS_CORRECTION: 200, SEQUENCE_TYPE: AA, PRIOR: /home/elyalab/Dev/failed_syncs/SpartaV2/spartaabc/default_prior.json
+2025-11-11 12:40:01,743[INFO][main.py][main]: {'fasta_file': PosixPath('/home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8/realigned.fasta'), 'tree_file': PosixPath('/home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8/raxml.tree'), 'model_file': PosixPath('/home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8/raxml.bestModel'), 'correction_recommended': True}
+2025-11-11 12:40:02,567[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762857601742879694, NUM_SIMS: 100000,
+	INDEL_MODEL sim
+2025-11-11 12:40:02,638[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762857601742879696, NUM_SIMS: 100000,
+	INDEL_MODEL rim
+2025-11-11 12:40:02,718[INFO][correction.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762857601742879697, NUM_SIMS: 200, SEQUENCE_TYPE: AA,
+	INDEL_MODEL: rim,
+	ALIGNER: MAFFTFAST
+2025-11-11 12:40:02,723[INFO][correction.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762857601742879695, NUM_SIMS: 200, SEQUENCE_TYPE: AA,
+	INDEL_MODEL: sim,
+	ALIGNER: MAFFTFAST
+2025-11-11 12:58:24,949[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762858704948988830, NUM_SIMS: 100000,
+	INDEL_MODEL sim
+2025-11-11 13:00:16,428[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762858816427921380, NUM_SIMS: 10,
+	INDEL_MODEL sim
