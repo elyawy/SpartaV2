@@ -22,9 +22,11 @@ class Aligner:
 
     def get_realigned_msa(self) -> str:
         # print(self._aligner_cmd)
-        if "MAFFT" in self._aligner_name:
-            result = subprocess.run(self._aligner_cmd, capture_output=True, text=True)
-            realigned_msa, stderr = result.stdout, result.stderr
+        result = subprocess.run(self._aligner_cmd, capture_output=True, text=True)
+        realigned_msa, stderr = result.stdout, result.stderr
+        # realigned_msa = realigned_msa.split("\n")
+        realigned_msa = [line for line in realigned_msa.split('\n') if line.strip()]
+        realigned_msa = "\n".join(realigned_msa[4:])
 
         return realigned_msa
 

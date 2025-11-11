@@ -28,3 +28,23 @@
 	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
 	SEED: 1762858816427921380, NUM_SIMS: 10,
 	INDEL_MODEL sim
+2025-11-11 13:03:55,354[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762859035354783571, NUM_SIMS: 10,
+	INDEL_MODEL sim
+2025-11-11 13:04:14,502[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762859054502239640, NUM_SIMS: 10,
+	INDEL_MODEL sim
+2025-11-11 13:04:40,059[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762859080059408002, NUM_SIMS: 10,
+	INDEL_MODEL sim
+2025-11-11 13:05:12,834[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762859112834608473, NUM_SIMS: 10,
+	INDEL_MODEL sim
+2025-11-11 13:05:56,857[INFO][simulate_data.py][main]: 
+	MAIN_PATH: /home/elyalab/Dev/failed_syncs/SpartaV2/benchmark/data_fast_sim/BBS11002_8,
+	SEED: 1762859156857553012, NUM_SIMS: 10,
+	INDEL_MODEL sim

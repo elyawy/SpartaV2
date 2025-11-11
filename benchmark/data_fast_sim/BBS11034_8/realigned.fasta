@@ -1,36 +1,16 @@
-Strategy: FFT-NS-1
-Explanation: Not available.
-Performance: Not tested.
-Results: /tmp/mafft_91bslpag
 >1nhp_
-
 ------------------------------------------------IRK------DKFNAQHVVHVCG------------------------------------------------------------GLY-------EIWMKK----------------------------HVAAKITW---IRI-----YQNRVKP---HTEN-----------KSPIVLLYMHACF--QP-------KFMC---MSMVKWHGREDTGDNCFESL--IVY-----D--S--------QGIRDQPAFV-----------------YHYIFPIHYD----------------WLHPKIIMPAFRPMYEMKFFAWWVS---PIFCSYIFYNCHGFHLKIAKQSKW---QK-FSHKPGT--FHCRNYM----LCEWYSNIFC---G-------------------FCFVYDE-------CVLKIAFM-----------DMWE--DDSPKVVFCCDLSMHH----SANDEFWDCMEQSNSFHQTFHDSTLPRSIIDAQVRCHFRYHPP----------------------------------CWHTFPLSTRA--FDCPQMMTF------------------------HVMG--------------TATNEPEQIWGW----TNNALDG-EHQ-IVINTN----------YFMVGQVAIV---
-
 >1mo9_A
-
 -TLYA-------------------------------------EMPIPSIVS------TAWTGPGL--VCAWD---------------------------------------------------------MGLSMDPG--NSVWWN---------------------------------NVCWPMTIQILDGVWFHSQLIP---HNENGHLFASDHLSQEDPTE----------EPP-----HEYTG---HWSIKWH-RYEQYNNSIMTLKHLVYVPVPMD--S-------PQDCKIGPTEM-----------------IIYIRALDDNSGY-----------KMYVEPGLQRPRDRQWY---FFHGCMSIKDP--CAQVWLSGNETHLHETRVHRY---TPVFVDGSG------------------FQQIYCMKHE-------------------YNMIFKD-------CV-EFMLM-----------QMDR--DEAPYL-------------------------RDNVCFRTHNEDPDPNP--------NYVTSPPNLK-------EHDEESMH---------------KCQGKMDLGMR----DAEKRVFR------------------------WLMA--------------IVRHQ------W----ENTHFNFLLHQGTEINTF----------NPPVGT-------
-
 >3grs_
-
 -----------------------------------------------EMQT-----CEHFAHEKP--VCRSV--------------------LLFCASAH--HPIVSCPRKDTSGNCNVLTPVDNVC--WPFFWQQR--NCMWSN------------------------W----H--NNITL---FRCFFVQMAHSRFKKDLQEFQQ-----------------TFFKVVFCNEPQKMDFKVRYVD--GVTEIKWH-------------------------IS-----------------------------------MHRITMVPFSKQFWQVAVAQWWPHKMWMSKCIN--ARISFFILEVWSWVFP-FKP--CA---------HHMFKTPRQVQP-HRNFETVEQN------HWAQ----LAWFAYGQAMNVALIIDPKAQKLPHMCGICESYCKMYENES-----CMYY---------------HVWQ---------------------------------ENNNTLNTQNPIPS--------------FIPTA------W-----HERMD--------------KWYQGYTPMGSLLRMRDTPFMVYY----LYDWHLYQPVVW--------WRIK-------------------------WN---IETGIPK----------------------------------
-
 >1bhy_
-
 -----------W------TWITNVNVPKDSIFAPPAYHYHQTQGVNNVMQKRPQRTMHHFQTPQY-IICGFK--------------------------------------------------------------------KIWTE----------------------------------------CQVF--YWPH-GMMV----VNN-----VGNPKQSGP---------------------------------WL-----------------------D--S-----------------------------------CMYCRSVRPNA---------------WMA----------------FKWCRT--------------QQWNKHGNAVSSV---NRNFNSAVEDWCYNVQNWMQ--TCYGWY--THSLHY-----------------------VFANSRPCLYCCIIYISFYPPQINGIFGIGHKWIMADQHTRGVW--AKEGNH--------YRQCCHCDIHCWLHTPRNQSDRWEIMEKCSA------PFDTDCSPAW-----EELTR-----------------WKGQV------WIHYEQRWIF-KIVQEDIHKSYGVSWMG------HQVGR-------DEVTFIQFYTQQKEQ--K----CNTQMD-------SVERHTQSCDEAGMDHFPEMNQPKHKLP
-
 >1fcd_A
-
 ------SFESNW-----------YKCKD----------------VQLMVRK------IDYPEQHM--MCSKE----YIMRNYSCIRNFRFSKVYLCVLAHCFHKFKQC-----------------MCRNQPFFMFPKSPSGLWLYFA----------------ASMDFHWHHQKH--SNICW---SHA----WYAEGTVN---FTDK----------IFSPL---WFRSN---HP-------GSML-ENVGKPQWL---DSIFKCQQHIEYENGVPNFEE--SGD----GQKNISANPNN---------------------CGMI-------------------------HRKND---------------PNPI---------QDEHHQFASGTNQMIVQRVDSEMSR----------------QTSRVVECLNH--------------------------------------------------------------PAQ--------------------WPCNIQDTS-YGCAWWTPATNEFMYIWKQESVIYTPVPMTYMP-W-----SHRCS---------------QGMKGQTFGCAAVFG-----HLL------------------------YRQG--------------CVVAPH-----W----RGERMPD-ENP-LETDQFFLSV----WYEF-----------
-
 >2tmd_A
-
 LTLQGCNEHAFWGYYNQHTLVWRFNCRSWGLCGP-----HNNEMMQPVIWS------LTYLQGGM-PVCGNLDPVIHVRQTWQVIYAAIFVFMYV------------------------------------FLMVPH-----WRKKD----------------SKMIKEW----H--SNMP----IHI----KYETGAMK---IFKK----------ETPPVT-CWC-------P-------EYMADESMQRKPW-----EGFCCAEARNSMTHYTSFEE--S-------QKKVFPDEGTLKNKYF-----------CYAYCGTIDSN----------------YNTALKHRCADVQMYFIRRF------ADPV---------KEYHHDVLNWR-----QHPDAKMP---------------------YITCM-----------------------------------------------------------------------------------------CGMQ-----------PEGMALGVELKGGMYMYVPDRLR-MS-WINQSDEHELR---------------QQISTQPMRTRRHFVTYCHLHYF------------------------HQTG--------------TCCQPQKQPFRW----T-DRLPD-VKD--ETDSI----------EMLPATTA-----
-
 >1d7y_A
-
 --------------------------PSQIIAGYPVEMGHNNQTKD-----------HDFNT-----FC-------------------------------------------------------------------------WAN----------------------------------------CR-----WTQEGVLSCAVNTNH-----EWSVHEDKPVE--FNQMVF--KY-------EFVW-------IWL-----------------------DCLS-----------------------------------IMYAR-VLGRS---------------WYCKCIMI----QVMFSNFFVW-------------------WRQEGQM----------FPKESATCCFDMFNKAQ--KICTWFRLVNVMHW----------------------------------CIMYWPFI-TQIC-------SWL----YPMGIW--KFEKKHDIIMPKKDAFLCCGYRFFGWKTVRMFVPDPICLFEGCKGATM--VPNDW-----W-----SHLTSIDLIQWAQAAANPRPEMWGKQVLG----W-----RMCFSKRARRSVCKKPDLQGSGRGFEKSYRLGRKWPFRPTDNKNF-NVWDQHGEE--WHVMCCHNYIDK-YNDCNSMEKYAMCC----LDK------------
-
 >1gv4_A
-
 -----------------------LYCEQ--------------------ITS---VLTLHMKVENP-DLCQGA---------YSAL-----------------------------GDCSIFISSAMQAQSTTYAML----SNLWEKKQFRRADPAGNYITCVNFPALGEEW----NMGDNPCPYY-CDIF-AYW-------------------------ACPFL--WCHYS---APP---F-VGCMGDQIIYRKTWW---------------------QEDWFDFNMILVLEERIKSQVAMCCHKLIWTGYGWCSKSSDYKYEDLVEMNTEMVVV----------WQFYALDQMASWNDCVKKHF------TGP--CF--GEACMGWWHKVMIEDHW---ERFMNRLSIMWAMGELTHLRPEMICLTFQWFRRLNWA--------------GV------VVENPS-----C--------------------WR---KPDMRIW--------------------------------------------------------------W--VDDTGMCN-------DGSEN---WCEGMRAIG----WCNYR-----------------------------YIESRA-PY---------ACIAENCGN--Y----QRQYIDE-----TT---------------------------
-
