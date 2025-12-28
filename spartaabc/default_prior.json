@@ -2,7 +2,7 @@
     "indel_rates": {
         "sum_rates": {
             "method": "uniform",
-            "range": [0.0,0.05]
+            "range": [0.0,0.1]
         },
         "ratio_rates": {
             "method": "log_uniform",

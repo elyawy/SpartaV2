@@ -48,6 +48,28 @@ class SamplingMethod:
         return 10 ** random.uniform(range_min, range_max)
     
     @staticmethod
+    def shifted_log_uniform(range_min: float, range_max: float) -> float:
+        """
+        Shift range to start at 0, apply log-uniform, then shift back.
+        For range [1.01, 2.0]: shift to [0.01, 1.0], sample log-uniformly, shift back.
+        """
+        # Find the shift constant (subtract minimum - some small offset)
+        shift = range_min - 0.01  # This maps [1.01, 2.0] → [0.01, 1.0]
+        
+        # Shifted range
+        shifted_min = range_min - shift  # = 0.01
+        shifted_max = range_max - shift  # = 0.99
+        
+        # Sample log-uniformly in shifted space
+        log_min = np.log10(shifted_min)
+        log_max = np.log10(shifted_max)
+        u = random.uniform(log_min, log_max)
+        shifted_value = 10 ** u
+        
+        # Shift back
+        return shifted_value + shift
+    
+    @staticmethod
     def integer_uniform(range_min: int, range_max: int) -> int:
         """Sample integer uniformly from [range_min, range_max]"""
         return random.randint(range_min, range_max)
@@ -58,7 +80,8 @@ class SamplingMethod:
         samplers = {
             "uniform": SamplingMethod.uniform,
             "log_uniform": SamplingMethod.log_uniform,
-            "integer_uniform": SamplingMethod.integer_uniform
+            "integer_uniform": SamplingMethod.integer_uniform,
+            "shifted_log_uniform": SamplingMethod.shifted_log_uniform
         }
         if method not in samplers:
             raise ValueError(f"Unknown sampling method: {method}. Available methods: {list(samplers.keys())}")

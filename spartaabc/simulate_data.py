@@ -9,9 +9,9 @@ import pandas as pd
 import msastats
 from msasim import sailfish as sf
 
-from spartaabc.prior_sampler import protocol_updater
+from spartaabc.prior_sampler import protocol_updater, PriorSampler
 from spartaabc.utility import logger, setLogHandler
-from spartaabc.utility import PriorSampler, prepare_prior_sampler
+from spartaabc.utility import prepare_prior_sampler
 from spartaabc.utility import get_msa_path, get_tree_path
 from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
 from spartaabc.utility import default_prior_config_path

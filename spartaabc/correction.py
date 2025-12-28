@@ -19,8 +19,10 @@ import msastats
 from spartaabc.prior_sampler import PriorSampler, protocol_updater
 from spartaabc.aligner_interface import Aligner
 from spartaabc.raxml_parser import get_substitution_model
-from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler
-from spartaabc.utility import StandardMemoryScaler, logger
+
+from spartaabc.correction_utilities import StandardMemoryScaler
+
+from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler, logger
 from spartaabc.utility import default_prior_config_path
 from spartaabc.utility import validate_input_directory
 from spartaabc.utility import check_dependencies
