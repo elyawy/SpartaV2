@@ -45,6 +45,8 @@ def parse_args(arg_list: list[str] | None):
     _parser.add_argument('-d','--distance', action='store',metavar="Distance metric", type=str, default="mahal", required=False)
     _parser.add_argument('-noc','--no-correction', action='store_false')
     _parser.add_argument('-s', '--exclude_stats', nargs= '+', type=str, default=[], help='List of stats to exclude from original')
+    _parser.add_argument('-r', '--r-threshold', type=float, default=0.85, help='Pearson r threshold for bias correction stat filtering')
+    _parser.add_argument('-mns', '--min-num-sumstat', type=int, default=15, help='Minimum number of summary stats to use after correction filtering')
 
     args = _parser.parse_args()
     return args
@@ -75,7 +77,7 @@ def load_correction_regressor_scores(main_path: Path, aligner: str):
 
     return scores["pearsonr"].to_list()
 
-def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float], kept_statistics: list[int], r_threshold=0.8):
+def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float], kept_statistics: list[int], r_threshold=0.85, min_num_sumstat=15):
     data = data.to_numpy()
 
     kept_stats = []
@@ -87,6 +89,15 @@ def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float
             kept_stats.append(idx)
             infered_data.append(regressor.predict(data).T)
 
+    # Fallback: if not enough stats pass the threshold, take the top min_num_sumstat by Pearson r
+    if len(kept_stats) < min_num_sumstat:
+        sorted_indices = sorted(kept_statistics, key=lambda i: regressor_scores[i], reverse=True)[:min_num_sumstat]
+        kept_stats = []
+        infered_data = []
+        for idx in sorted_indices:
+            kept_stats.append(idx)
+            infered_data.append(regressors[idx].predict(data).T)
+
     temp_data = np.array(infered_data)
     temp_data = pd.DataFrame(temp_data.T, columns=[SUMSTATS_LIST[i] for i in kept_stats])
 
@@ -94,7 +105,7 @@ def bias_correction(regressors, data: pd.DataFrame, regressor_scores: list[float
 
     return inferred_realigned_stats, kept_stats
 
-def correct_and_merge_models_data(main_path: Path, aligner: str, kept_statistics, parameters_and_stats) -> tuple[pd.DataFrame, list[int]]:
+def correct_and_merge_models_data(main_path: Path, aligner: str, kept_statistics, parameters_and_stats, r_threshold=0.85, min_num_sumstat=15) -> tuple[pd.DataFrame, list[int]]:
     regressors = load_correction_regressors(main_path, aligner)
     regressor_scores = load_correction_regressor_scores(main_path, aligner)
     
@@ -104,7 +115,9 @@ def correct_and_merge_models_data(main_path: Path, aligner: str, kept_statistics
 
         realigned_statistics, kept_statistics = bias_correction(current_regressors,
                                                                 parameters_and_stats[model],
-                                                                regressor_scores, kept_statistics)
+                                                                regressor_scores, kept_statistics,
+                                                                r_threshold=r_threshold,
+                                                                min_num_sumstat=min_num_sumstat)
         stats_data.append(realigned_statistics)
 
     return pd.concat(stats_data), kept_statistics
@@ -112,7 +125,7 @@ def correct_and_merge_models_data(main_path: Path, aligner: str, kept_statistics
 
 
 
-def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=True, top_cutoff: int=100, exclude_stats: list[str] = []) -> IndelParams:
+def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=True, top_cutoff: int=100, exclude_stats: list[str] = [], r_threshold: float=0.85, min_num_sumstat: int=15) -> IndelParams:
 
     invalid = [stat for stat in exclude_stats if stat not in SUMSTATS_LIST]
     if invalid:
@@ -138,7 +151,9 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
         
         stats_df, kept_statistics_indices = correct_and_merge_models_data(main_path, aligner,
                                                                           kept_statistics_indices,
-                                                                          parameters_and_stats)
+                                                                          parameters_and_stats,
+                                                                          r_threshold=r_threshold,
+                                                                          min_num_sumstat=min_num_sumstat)
         stats_df.drop(columns=exclude_stats, inplace=True, errors="ignore")
     else:
         stats_df = pd.concat([parameters_and_stats[model][SUMSTATS_LIST_SUBSET] for model in  parameters_and_stats.keys()])
@@ -209,6 +224,8 @@ def main(arg_list: list[str] | None = None):
     DISTANCE_METRIC = args.distance
     CORRECTION = args.no_correction
     EXCLUDE_STATS= args.exclude_stats
+    R_THRESHOLD = args.r_threshold
+    MIN_NUM_SUMSTAT = args.min_num_sumstat
     print(MAIN_PATH)
     
     setLogHandler(MAIN_PATH)
@@ -216,7 +233,7 @@ def main(arg_list: list[str] | None = None):
         MAIN_PATH
     ))
 
-    run(MAIN_PATH, ALIGNER, DISTANCE_METRIC, correction=CORRECTION, exclude_stats= EXCLUDE_STATS)
+    run(MAIN_PATH, ALIGNER, DISTANCE_METRIC, correction=CORRECTION, exclude_stats=EXCLUDE_STATS, r_threshold=R_THRESHOLD, min_num_sumstat=MIN_NUM_SUMSTAT)
 
 
 if __name__ == "__main__":

@@ -127,10 +127,12 @@ def parse_raxml_bestModel(model_path: Path):
     if (results['submodel']) == -1:
         raise RuntimeError("The requested model has not been implemented :(")
     
-    if results['submodel'] == sf.MODEL_CODES.GTR:
+    if results['submodel'] in [sf.MODEL_CODES.GTR, sf.MODEL_CODES.HKY]:
         left_bracket_index = model_components[0].find("{")
         right_bracket_index = model_components[0].find("}")
         rates = model_components[0][left_bracket_index+1:right_bracket_index]
+        # Extract rates and convert to float
+        # RaxML-ng outputs rates in the format "rate1/rate2/rate3/rate4/rate5/rate6"
         rates = rates.split("/")
         rates = [float(x) for x in rates]
         results["params"] = rates
@@ -142,7 +144,7 @@ def parse_raxml_bestModel(model_path: Path):
         left_bracket_index = component.find("{")
         right_bracket_index = component.find("}")
 
-        if component.startswith('F'):
+        if component.startswith('F') and 'params' in results:
             rates = []
             if left_bracket_index != -1:
                 frequencies = (component[left_bracket_index+1:right_bracket_index])  # Remove 'G' and convert to int

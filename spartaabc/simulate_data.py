@@ -69,8 +69,14 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
         numeric_params = [root_length ,insertion_rate, deletion_rate, insertion_length_dist.p, deletion_length_dist.p]
         protocol_updater(sim_protocol, [root_length, insertion_rate, deletion_rate,
                          insertion_length_dist, deletion_length_dist])
+        print(f"Simulating MSA {i+1}/{num_sims} with parameters: {numeric_params}")
+        try:
+            sim_msa = simulator()
+        except Exception as e:
+            logger.error(f"Error occurred while simulating MSA {i}: {e}")
+            logger.info("crashed on parameters: {}".format(numeric_params))
+            continue
 
-        sim_msa = simulator()
         sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines())
 
         sum_stats.append(numeric_params + sim_stats)

@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spartaabc"
-version = "0.8.0"
+version = "26.4.1"
 readme = "README.md"
-description = "Indel model parameter inference."
+description = "Indel model parameter inference using Approximate Bayesian Computation."
 license = {text = "AFL-3.0"}
 dependencies = [
     "scikit-learn",
