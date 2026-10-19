@@ -7,10 +7,10 @@ import numpy as np
 import pandas as pd
 
 import msastats
-from msasim import sailfish as sf
+from msasim import SimProtocol, Simulator
 
 from spartaabc.prior_sampler import protocol_updater, PriorSampler
-from spartaabc.utility import logger, setLogHandler
+from spartaabc.utility import logger, setLogHandler, msa_to_fasta
 from spartaabc.utility import prepare_prior_sampler
 from spartaabc.utility import get_msa_path, get_tree_path
 from spartaabc.utility import PARAMS_LIST, SUMSTATS_LIST
@@ -36,10 +36,10 @@ def parse_args(arg_list: list[str] | None):
 
 def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, seed: int):
     logger.debug(f"num_sims {num_sims} tree_path {tree_path} seed {seed}")
-    sim_protocol = sf.SimProtocol(tree=tree_path)
-    
+    sim_protocol = SimProtocol(tree=tree_path)
+
     sim_protocol.set_seed(seed)
-    simulator = sf.Simulator(sim_protocol,simulation_type=sf.SIMULATION_TYPE.NOSUBS)
+    simulator = Simulator(sim_protocol)
 
     # simulated_msas = []
     sum_stats = []
@@ -71,7 +71,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
                          insertion_length_dist, deletion_length_dist])
 
         sim_msa = simulator()
-        sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines())
+        sim_stats = msastats.calculate_msa_stats(msa_to_fasta(sim_msa).splitlines())
 
         sum_stats.append(numeric_params + sim_stats)
     logger.info(f"Done with {num_sims} msa simulations")

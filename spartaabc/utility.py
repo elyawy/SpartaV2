@@ -62,6 +62,9 @@ def check_dependencies():
             print(f"   Please make sure that {tool} is installed on your system.")
             sys.exit(1)
 
+def msa_to_fasta(msa) -> str:
+    return "\n".join(msa.get_msa_row(i) for i in range(msa.get_num_sequences()))
+
 def get_tree_path(main_path: Path) -> str:
     tree_path = None
     if len( n := list(main_path.glob("*.tree")) + list(main_path.glob("*.newick"))) == 1:
@@ -184,5 +187,3 @@ def setLogHandler(path: Path, mode: str="a"):
     # handler.setFormatter(formatter)
     # handler.setLevel(logging.ERROR)
     # logger.addHandler(handler)
-
-

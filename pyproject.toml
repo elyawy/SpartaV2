@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spartaabc"
-version = "0.8.0"
+version = "0.9.0"
 readme = "README.md"
 description = "Indel model parameter inference."
 license = {text = "AFL-3.0"}
@@ -12,7 +12,7 @@ dependencies = [
     "scikit-learn",
     "pandas",
     "pyarrow",
-    "msasim",
+    "msasim==26.8.1",
     "msastats",
     "itaxotools-mafftpy"
 ]

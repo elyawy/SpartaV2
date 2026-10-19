@@ -13,7 +13,8 @@ from sklearn import linear_model, model_selection, exceptions
 from sklearn.pipeline import Pipeline
 from scipy.stats import pearsonr
 
-from msasim import sailfish as sf
+from msasim import (SimProtocol, Simulator, Msa, ReplacementModelSpec,
+                    SiteRateModelSpec, ALPHABET_CODES)
 import msastats
 
 from spartaabc.prior_sampler import PriorSampler, protocol_updater
@@ -22,7 +23,7 @@ from spartaabc.raxml_parser import get_substitution_model
 
 from spartaabc.correction_utilities import StandardMemoryScaler
 
-from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler, logger
+from spartaabc.utility import get_msa_path, get_tree_path, prepare_prior_sampler, setLogHandler, logger, msa_to_fasta
 from spartaabc.utility import default_prior_config_path
 from spartaabc.utility import validate_input_directory
 from spartaabc.utility import check_dependencies
@@ -53,26 +54,27 @@ def parse_args(arg_list: list[str] | None):
 def prepare_substitution_model(main_path: Path, sequence_type: str):
 
     substitution_model = get_substitution_model(main_path)# if sequence_type == "NT" else {}
-    substitution_model["mode"] = "DNA" if sequence_type == "NT" else "PROTEIN"
+    substitution_model["alphabet"] = ALPHABET_CODES.DNA if sequence_type == "NT" else ALPHABET_CODES.PROTEIN
     
     return substitution_model
 
 
 def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, substitution_model: dict, seed: int):
-    sim_protocol = sf.SimProtocol(tree_path, seed=seed)
-    simulator = sf.Simulator(sim_protocol,
-                             simulation_type=sf.SIMULATION_TYPE[substitution_model["mode"]])
+    sim_protocol = SimProtocol(tree_path, seed=seed)
+    replacement_model = ReplacementModelSpec(
+        model=substitution_model["submodel"],
+        alphabet=substitution_model["alphabet"],
+        model_parameters=substitution_model.get("params", None),
+        site_rate_model=SiteRateModelSpec(
+            gamma_alpha=substitution_model.get("gamma_shape", 1.0),
+            gamma_categories=substitution_model.get("gamma_cats", 1),
+            invariant_proportion=substitution_model.get("invariant_sites", 0.0)))
+    simulator = Simulator(sim_protocol, replacement_model=replacement_model)
 
     simulated_msas = []
     sum_stats = []
 
     sim_params_correction = prior_sampler.sample(num_sims)
-
-    simulator.set_replacement_model(model=substitution_model["submodel"],
-                                    model_parameters=substitution_model.get("params", None),
-                                    gamma_parameters_alpha=substitution_model.get("gamma_shape", 1.0),
-                                    gamma_parameters_categories=substitution_model.get("gamma_cats", 1),
-                                    invariant_sites_proportion=substitution_model.get("invariant_sites", 0.0))
 
     logger.info("Starting msa simulation")
     for idx,params in enumerate(sim_params_correction):
@@ -85,7 +87,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
                          insertion_length_dist, deletion_length_dist])
 
         sim_msa = simulator()
-        sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines()[1::2])
+        sim_stats = msastats.calculate_msa_stats(msa_to_fasta(sim_msa).splitlines()[1::2])
         # print(sim_stats)
         simulated_msas.append(sim_msa)
         sum_stats.append(numeric_params + sim_stats)
@@ -94,7 +96,7 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, su
     return simulated_msas, sum_stats
 
 
-def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
+def compute_realigned_stats(msas: list[Msa], sum_stats: list[list[float]],
                             sequence_aligner: Aligner, tree_path: str, indel_model):
     logger.info("Realigning MSAs and recomputing stats")
     realigned_sum_stats = []
@@ -111,7 +113,7 @@ def compute_realigned_stats(msas: list[sf.Msa], sum_stats: list[list[float]],
             logger.info(f"Realignment progress ({indel_model}): {i}/{total_msas} ({percentage:.1f}%)")
             next_log += log_interval
 
-        sim_fasta_unaligned = msa.get_msa().replace("-","").encode()
+        sim_fasta_unaligned = msa_to_fasta(msa).replace("-","").encode()
         with tempfile.NamedTemporaryFile(suffix='.fasta') as tempf:
             tempf.write(sim_fasta_unaligned)
             tempf.seek(0)

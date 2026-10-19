@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict
 
-from msasim import sailfish as sf
+from msasim import SimProtocol, CustomDistribution
 
 
 def fast_zipf(a_param, truncation):
@@ -27,12 +27,12 @@ len_dist_mapper = {
 
 
 
-def protocol_updater(protocol: sf.SimProtocol, params: list) -> None:
+def protocol_updater(protocol: SimProtocol, params: list) -> None:
     protocol.set_sequence_size(params[0])
-    protocol.set_insertion_rates(insertion_rate=params[1])
-    protocol.set_deletion_rates(deletion_rate=params[2])
-    protocol.set_insertion_length_distributions(insertion_dist=params[3])
-    protocol.set_deletion_length_distributions(deletion_dist=params[4])
+    protocol.set_insertion_rates(params[1])
+    protocol.set_deletion_rates(params[2])
+    protocol.set_insertion_length_distributions(params[3])
+    protocol.set_deletion_length_distributions(params[4])
 
 
 class SamplingMethod:
@@ -101,7 +101,7 @@ class PriorSampler:
         random.seed(seed)
 
         # Set length distribution and indel model directly, not from config
-        self.length_distribution = sf.CustomDistribution
+        self.length_distribution = CustomDistribution
         self.indel_model = indel_model
         # Default configuration - exclude indel_model (sim/rim)
         self.config = {

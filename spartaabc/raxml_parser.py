@@ -2,22 +2,22 @@ import os
 import re
 from pathlib import Path
 
-from msasim import sailfish as sf
+from msasim import MODEL_CODES
 
 MODEL_MAPPER = {
     # Protein models
-    "WAG": sf.MODEL_CODES.WAG,
-    "LG": sf.MODEL_CODES.LG,
-    "cpREV": sf.MODEL_CODES.CPREV45,
-    "Dayhoff": sf.MODEL_CODES.DAYHOFF,
-    "HIVb": sf.MODEL_CODES.HIVB,
-    "HIVw": sf.MODEL_CODES.HIVW,
-    "JTT": sf.MODEL_CODES.JONES,
-    "mtREV": sf.MODEL_CODES.MTREV24,
+    "WAG": MODEL_CODES.WAG,
+    "LG": MODEL_CODES.LG,
+    "cpREV": MODEL_CODES.CPREV45,
+    "Dayhoff": MODEL_CODES.DAYHOFF,
+    "HIVb": MODEL_CODES.HIVB,
+    "HIVw": MODEL_CODES.HIVW,
+    "JTT": MODEL_CODES.JONES,
+    "mtREV": MODEL_CODES.MTREV24,
     # Nucleotide models
-    "JC": sf.MODEL_CODES.NUCJC,
-    "HKY": sf.MODEL_CODES.HKY,
-    "GTR": sf.MODEL_CODES.GTR,
+    "JC": MODEL_CODES.NUCJC,
+    "HKY": MODEL_CODES.HKY,
+    "GTR": MODEL_CODES.GTR,
 
 
 }
@@ -127,7 +127,7 @@ def parse_raxml_bestModel(model_path: Path):
     if (results['submodel']) == -1:
         raise RuntimeError("The requested model has not been implemented :(")
     
-    if results['submodel'] == sf.MODEL_CODES.GTR:
+    if results['submodel'] == MODEL_CODES.GTR:
         left_bracket_index = model_components[0].find("{")
         right_bracket_index = model_components[0].find("}")
         rates = model_components[0][left_bracket_index+1:right_bracket_index]
